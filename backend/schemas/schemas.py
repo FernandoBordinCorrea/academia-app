@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 
 # --- User ---
@@ -69,6 +69,43 @@ class ExerciseResponse(BaseModel):
     weight: float
     user_id: int
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# --- Workout ---
+
+class WorkoutExerciseItem(BaseModel):
+    exercise_id: int
+    order: int
+
+
+class WorkoutCreate(BaseModel):
+    name: str
+    exercises: List[WorkoutExerciseItem]
+
+
+class WorkoutUpdate(BaseModel):
+    name: Optional[str] = None
+    exercises: Optional[List[WorkoutExerciseItem]] = None
+
+
+class WorkoutExerciseResponse(BaseModel):
+    exercise_id: int
+    order: int
+    exercise: ExerciseResponse
+
+    class Config:
+        from_attributes = True
+
+
+class WorkoutResponse(BaseModel):
+    id: int
+    name: str
+    user_id: int
+    created_at: datetime
+    items: List[WorkoutExerciseResponse]
 
     class Config:
         from_attributes = True

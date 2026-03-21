@@ -1,15 +1,20 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView,
+  Alert, ActivityIndicator, KeyboardAvoidingView,
   Platform, ScrollView
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import styles from './RegisterScreen.styles';
+import { parseApiError } from '../../utils/errorMessage';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function RegisterScreen({ navigation }) {
   const { register } = useAuth();
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirmpassword: '' });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   function setField(field, value) {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -29,7 +34,7 @@ export default function RegisterScreen({ navigation }) {
       setLoading(true);
       await register(name, email, phone, password, confirmpassword);
     } catch (e) {
-      Alert.alert('Erro', e.response?.data?.detail || 'Erro ao cadastrar');
+      Alert.alert('Erro', parseApiError(e, 'Erro ao cadastrar'));
     } finally {
       setLoading(false);
     }
@@ -45,9 +50,7 @@ export default function RegisterScreen({ navigation }) {
           { field: 'name', placeholder: 'Nome completo' },
           { field: 'email', placeholder: 'Email', keyboard: 'email-address', autoCapitalize: 'none' },
           { field: 'phone', placeholder: 'Telefone', keyboard: 'phone-pad' },
-          { field: 'password', placeholder: 'Senha', secure: true },
-          { field: 'confirmpassword', placeholder: 'Confirmar senha', secure: true },
-        ].map(({ field, placeholder, keyboard, secure, autoCapitalize }) => (
+        ].map(({ field, placeholder, keyboard, autoCapitalize }) => (
           <TextInput
             key={field}
             style={styles.input}
@@ -55,11 +58,40 @@ export default function RegisterScreen({ navigation }) {
             placeholderTextColor="#999"
             keyboardType={keyboard || 'default'}
             autoCapitalize={autoCapitalize || 'words'}
-            secureTextEntry={secure || false}
             value={form[field]}
             onChangeText={(v) => setField(field, v)}
           />
         ))}
+
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Senha"
+            placeholderTextColor="#999"
+            autoCapitalize="none"
+            secureTextEntry={!showPassword}
+            value={form.password}
+            onChangeText={(v) => setField('password', v)}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(p => !p)} style={styles.eyeButton}>
+            <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color="#999" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Confirmar senha"
+            placeholderTextColor="#999"
+            autoCapitalize="none"
+            secureTextEntry={!showConfirmPassword}
+            value={form.confirmpassword}
+            onChangeText={(v) => setField('confirmpassword', v)}
+          />
+          <TouchableOpacity onPress={() => setShowConfirmPassword(p => !p)} style={styles.eyeButton}>
+            <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color="#999" />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
           {loading ? <ActivityIndicator color="#121212" /> : <Text style={styles.buttonText}>Cadastrar</Text>}
@@ -73,56 +105,3 @@ export default function RegisterScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 40,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#E8FF47',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#aaa',
-    marginBottom: 28,
-  },
-  input: {
-    width: '100%',
-    backgroundColor: '#1E1E1E',
-    color: '#fff',
-    borderRadius: 10,
-    padding: 14,
-    fontSize: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  button: {
-    width: '100%',
-    backgroundColor: '#E8FF47',
-    borderRadius: 10,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 20,
-  },
-  buttonText: {
-    color: '#121212',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  link: {
-    color: '#aaa',
-    fontSize: 14,
-  },
-  linkBold: {
-    color: '#E8FF47',
-    fontWeight: 'bold',
-  },
-});

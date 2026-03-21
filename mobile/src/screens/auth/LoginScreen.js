@@ -1,15 +1,19 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform
+  Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import styles from './LoginScreen.styles';
+import { parseApiError } from '../../utils/errorMessage';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleLogin() {
     if (!email || !password) {
@@ -20,7 +24,7 @@ export default function LoginScreen({ navigation }) {
       setLoading(true);
       await login(email, password);
     } catch (e) {
-      Alert.alert('Erro', e.response?.data?.detail || 'Erro ao fazer login');
+      Alert.alert('Erro', parseApiError(e, 'Erro ao fazer login'));
     } finally {
       setLoading(false);
     }
@@ -40,14 +44,20 @@ export default function LoginScreen({ navigation }) {
         value={email}
         onChangeText={setEmail}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        placeholderTextColor="#999"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Senha"
+          placeholderTextColor="#999"
+          autoCapitalize="none"
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={setPassword}
+        />
+        <TouchableOpacity onPress={() => setShowPassword(p => !p)} style={styles.eyeButton}>
+          <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color="#999" />
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Entrar</Text>}
@@ -59,57 +69,3 @@ export default function LoginScreen({ navigation }) {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121212',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#E8FF47',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#aaa',
-    marginBottom: 32,
-  },
-  input: {
-    width: '100%',
-    backgroundColor: '#1E1E1E',
-    color: '#fff',
-    borderRadius: 10,
-    padding: 14,
-    fontSize: 16,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  button: {
-    width: '100%',
-    backgroundColor: '#E8FF47',
-    borderRadius: 10,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 20,
-  },
-  buttonText: {
-    color: '#121212',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  link: {
-    color: '#aaa',
-    fontSize: 14,
-  },
-  linkBold: {
-    color: '#E8FF47',
-    fontWeight: 'bold',
-  },
-});

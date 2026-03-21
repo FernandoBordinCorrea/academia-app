@@ -8,6 +8,9 @@ import RegisterScreen from '../screens/auth/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ExerciseListScreen from '../screens/exercises/ExerciseListScreen';
 import ExerciseFormScreen from '../screens/exercises/ExerciseFormScreen';
+import WorkoutListScreen from '../screens/workouts/WorkoutListScreen';
+import WorkoutFormScreen from '../screens/workouts/WorkoutFormScreen';
+import WorkoutDetailScreen from '../screens/workouts/WorkoutDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,6 +35,9 @@ function AppStack() {
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="ExerciseList" component={ExerciseListScreen} options={{ title: 'Exercícios' }} />
       <Stack.Screen name="ExerciseForm" component={ExerciseFormScreen} options={{ title: '' }} />
+      <Stack.Screen name="WorkoutList" component={WorkoutListScreen} options={{ title: 'Treinos' }} />
+      <Stack.Screen name="WorkoutForm" component={WorkoutFormScreen} options={{ title: '' }} />
+      <Stack.Screen name="WorkoutDetail" component={WorkoutDetailScreen} options={{ title: '' }} />
     </Stack.Navigator>
   );
 }

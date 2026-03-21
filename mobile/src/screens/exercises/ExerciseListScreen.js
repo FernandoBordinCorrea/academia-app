@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, Alert, ActivityIndicator
+  Alert, ActivityIndicator
 } from 'react-native';
+import styles from './ExerciseListScreen.styles';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../../services/api';
 
@@ -94,86 +95,3 @@ export default function ExerciseListScreen({ navigation }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121212',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  addButton: {
-    backgroundColor: '#E8FF47',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  addButtonText: {
-    color: '#121212',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  card: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#2a2a2a',
-  },
-  cardInfo: {
-    flex: 1,
-  },
-  cardName: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  cardDetail: {
-    color: '#aaa',
-    fontSize: 13,
-  },
-  cardActions: {
-    gap: 8,
-    alignItems: 'flex-end',
-  },
-  editBtn: {
-    color: '#E8FF47',
-    fontSize: 13,
-    fontWeight: 'bold',
-  },
-  deleteBtn: {
-    color: '#ff5555',
-    fontSize: 13,
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    color: '#aaa',
-    fontSize: 15,
-    marginBottom: 12,
-  },
-  emptyLink: {
-    color: '#E8FF47',
-    fontWeight: 'bold',
-    fontSize: 15,
-  },
-});

@@ -1,0 +1,120 @@
+import { StyleSheet } from 'react-native';
+
+export default StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
+  container: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 40,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 24,
+  },
+  label: {
+    color: '#aaa',
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#1E1E1E',
+    color: '#fff',
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  emptySelected: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 10,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333',
+    borderStyle: 'dashed',
+    marginBottom: 4,
+  },
+  emptySelectedText: {
+    color: '#555',
+    fontSize: 14,
+  },
+  selectedItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E1E1E',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+  },
+  selectedOrder: {
+    color: '#E8FF47',
+    fontWeight: 'bold',
+    fontSize: 15,
+    width: 24,
+  },
+  selectedName: {
+    color: '#fff',
+    fontSize: 15,
+    flex: 1,
+  },
+  selectedActions: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  orderBtn: {
+    padding: 4,
+  },
+  availableItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E1E1E',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+  },
+  availableName: {
+    color: '#fff',
+    fontSize: 15,
+    flex: 1,
+  },
+  availableDetail: {
+    color: '#aaa',
+    fontSize: 12,
+    marginRight: 10,
+  },
+  allAddedText: {
+    color: '#555',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  button: {
+    backgroundColor: '#E8FF47',
+    borderRadius: 10,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  buttonText: {
+    color: '#121212',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  cancelText: {
+    color: '#aaa',
+    fontSize: 15,
+    textAlign: 'center',
+  },
+});
