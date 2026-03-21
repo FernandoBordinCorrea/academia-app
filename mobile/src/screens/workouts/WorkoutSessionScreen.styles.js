@@ -1,0 +1,153 @@
+import { StyleSheet } from 'react-native';
+
+export default StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
+  timerContainer: {
+    alignItems: 'center',
+    paddingVertical: 36,
+    paddingHorizontal: 20,
+    backgroundColor: '#1E1E1E',
+    borderBottomWidth: 1,
+    borderBottomColor: '#2a2a2a',
+  },
+  timerLabel: {
+    color: '#aaa',
+    fontSize: 11,
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
+  timer: {
+    color: '#E8FF47',
+    fontSize: 64,
+    fontWeight: 'bold',
+    letterSpacing: 2,
+    fontVariant: ['tabular-nums'],
+  },
+  workoutName: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 10,
+    fontWeight: '600',
+  },
+  caloriesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  caloriesText: {
+    color: '#E8FF47',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 24,
+  },
+  card: {
+    flexDirection: 'row',
+    backgroundColor: '#1E1E1E',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+    alignItems: 'center',
+    gap: 14,
+  },
+  cardOrder: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#2a2a2a',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardOrderText: {
+    color: '#E8FF47',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  cardInfo: {
+    flex: 1,
+  },
+  cardName: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  stat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statValue: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  statLabel: {
+    color: '#aaa',
+    fontSize: 12,
+  },
+  statDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: '#333',
+  },
+  weightStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  weightInput: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+    minWidth: 36,
+    maxWidth: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8FF47',
+    paddingVertical: 0,
+    textAlign: 'center',
+  },
+  weightHint: {
+    color: '#555',
+    fontSize: 10,
+    marginTop: 6,
+  },
+  footer: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#2a2a2a',
+    backgroundColor: '#121212',
+  },
+  finishButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E8FF47',
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  finishButtonText: {
+    color: '#121212',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+});

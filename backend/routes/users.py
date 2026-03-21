@@ -17,6 +17,9 @@ def register(data: UserCreate, db: Session = Depends(get_db)):
     if data.password != data.confirmpassword:
         raise HTTPException(status_code=422, detail="As senhas não conferem")
 
+    if data.gender not in ('M', 'F'):
+        raise HTTPException(status_code=422, detail="Sexo inválido")
+
     if db.query(User).filter(User.email == data.email).first():
         raise HTTPException(status_code=422, detail="Email já cadastrado")
 
@@ -25,6 +28,8 @@ def register(data: UserCreate, db: Session = Depends(get_db)):
         email=data.email,
         phone=data.phone,
         password=hash_password(data.password),
+        weight=data.weight,
+        gender=data.gender,
     )
     db.add(user)
     db.commit()
@@ -65,6 +70,12 @@ def update_me(data: UserUpdate, db: Session = Depends(get_db), current_user: Use
         current_user.email = data.email
     if data.password:
         current_user.password = hash_password(data.password)
+    if data.weight is not None:
+        current_user.weight = data.weight
+    if data.gender is not None:
+        if data.gender not in ('M', 'F'):
+            raise HTTPException(status_code=422, detail="Sexo inválido")
+        current_user.gender = data.gender
 
     db.commit()
     db.refresh(current_user)

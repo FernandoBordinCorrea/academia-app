@@ -1,11 +1,13 @@
 import { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../services/api';
 import styles from './WorkoutListScreen.styles';
+import { useModal } from '../../context/ModalContext';
 
 export default function WorkoutListScreen({ navigation }) {
+  const { show } = useModal();
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,14 +23,14 @@ export default function WorkoutListScreen({ navigation }) {
       const res = await api.get('/workouts/');
       setWorkouts(res.data);
     } catch {
-      Alert.alert('Erro', 'Não foi possível carregar os treinos');
+      show('Erro', 'Não foi possível carregar os treinos');
     } finally {
       setLoading(false);
     }
   }
 
   async function handleDelete(id) {
-    Alert.alert('Remover treino', 'Tem certeza que deseja remover este treino?', [
+    show('Remover treino', 'Tem certeza que deseja remover este treino?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Remover',
@@ -38,7 +40,7 @@ export default function WorkoutListScreen({ navigation }) {
             await api.delete(`/workouts/${id}`);
             setWorkouts(prev => prev.filter(w => w.id !== id));
           } catch {
-            Alert.alert('Erro', 'Não foi possível remover o treino');
+            show('Erro', 'Não foi possível remover o treino');
           }
         },
       },

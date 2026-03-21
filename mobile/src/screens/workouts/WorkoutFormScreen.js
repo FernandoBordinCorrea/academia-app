@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  Alert, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform
+  ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../services/api';
 import styles from './WorkoutFormScreen.styles';
+import { useModal } from '../../context/ModalContext';
 
 export default function WorkoutFormScreen({ route, navigation }) {
+  const { show } = useModal();
   const existing = route.params?.workout;
   const isEditing = !!existing;
 
@@ -28,7 +30,7 @@ export default function WorkoutFormScreen({ route, navigation }) {
       const res = await api.get('/exercises/');
       setAvailable(res.data);
     } catch {
-      Alert.alert('Erro', 'Não foi possível carregar os exercícios');
+      show('Erro', 'Não foi possível carregar os exercícios');
     } finally {
       setLoadingExercises(false);
     }
@@ -66,11 +68,11 @@ export default function WorkoutFormScreen({ route, navigation }) {
 
   async function handleSubmit() {
     if (!name.trim()) {
-      Alert.alert('Erro', 'Digite um nome para o treino');
+      show('Erro', 'Digite um nome para o treino');
       return;
     }
     if (selected.length === 0) {
-      Alert.alert('Erro', 'Adicione pelo menos um exercício ao treino');
+      show('Erro', 'Adicione pelo menos um exercício ao treino');
       return;
     }
 
@@ -88,7 +90,7 @@ export default function WorkoutFormScreen({ route, navigation }) {
       }
       navigation.goBack();
     } catch (e) {
-      Alert.alert('Erro', e.response?.data?.detail || 'Erro ao salvar treino');
+      show('Erro', e.response?.data?.detail || 'Erro ao salvar treino');
     } finally {
       setLoading(false);
     }

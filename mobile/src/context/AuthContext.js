@@ -33,8 +33,8 @@ export function AuthProvider({ children }) {
     setUser(res.data.user);
   }
 
-  async function register(name, email, phone, password, confirmpassword) {
-    const res = await api.post('/users/register', { name, email, phone, password, confirmpassword });
+  async function register(name, email, phone, password, confirmpassword, weight, gender) {
+    const res = await api.post('/users/register', { name, email, phone, password, confirmpassword, weight, gender });
     await AsyncStorage.setItem('token', res.data.access_token);
     await AsyncStorage.setItem('user', JSON.stringify(res.data.user));
     setUser(res.data.user);

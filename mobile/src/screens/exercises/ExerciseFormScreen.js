@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  Alert, ActivityIndicator,
+  ActivityIndicator,
   KeyboardAvoidingView, Platform, ScrollView
 } from 'react-native';
 import styles from './ExerciseFormScreen.styles';
 import api from '../../services/api';
+import { useModal } from '../../context/ModalContext';
 
 export default function ExerciseFormScreen({ route, navigation }) {
+  const { show } = useModal();
   const existing = route.params?.exercise;
   const isEditing = !!existing;
 
@@ -26,7 +28,7 @@ export default function ExerciseFormScreen({ route, navigation }) {
   async function handleSubmit() {
     const { name, sets, reps, weight } = form;
     if (!name || !sets || !reps || !weight) {
-      Alert.alert('Erro', 'Preencha todos os campos');
+      show('Erro', 'Preencha todos os campos');
       return;
     }
     try {
@@ -44,7 +46,7 @@ export default function ExerciseFormScreen({ route, navigation }) {
       }
       navigation.goBack();
     } catch (e) {
-      Alert.alert('Erro', e.response?.data?.detail || 'Erro ao salvar exercício');
+      show('Erro', e.response?.data?.detail || 'Erro ao salvar exercício');
     } finally {
       setLoading(false);
     }

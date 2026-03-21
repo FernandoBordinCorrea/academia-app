@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  Alert, ActivityIndicator, KeyboardAvoidingView,
+  ActivityIndicator, KeyboardAvoidingView,
   Platform, ScrollView
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import styles from './RegisterScreen.styles';
 import { parseApiError } from '../../utils/errorMessage';
 import { Ionicons } from '@expo/vector-icons';
+import { useModal } from '../../context/ModalContext';
 
 export default function RegisterScreen({ navigation }) {
+  const { show } = useModal();
   const { register } = useAuth();
-  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirmpassword: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirmpassword: '', weight: '' });
+  const [gender, setGender] = useState(null); // 'M' ou 'F'
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -21,20 +24,29 @@ export default function RegisterScreen({ navigation }) {
   }
 
   async function handleRegister() {
-    const { name, email, phone, password, confirmpassword } = form;
-    if (!name || !email || !phone || !password || !confirmpassword) {
-      Alert.alert('Erro', 'Preencha todos os campos');
+    const { name, email, phone, password, confirmpassword, weight } = form;
+    if (!name || !email || !phone || !password || !confirmpassword || !weight) {
+      show('Erro', 'Preencha todos os campos');
+      return;
+    }
+    if (!gender) {
+      show('Erro', 'Selecione o sexo');
       return;
     }
     if (password !== confirmpassword) {
-      Alert.alert('Erro', 'As senhas não conferem');
+      show('Erro', 'As senhas não conferem');
+      return;
+    }
+    const weightNum = parseFloat(weight.replace(',', '.'));
+    if (isNaN(weightNum) || weightNum <= 0) {
+      show('Erro', 'Informe um peso válido');
       return;
     }
     try {
       setLoading(true);
-      await register(name, email, phone, password, confirmpassword);
+      await register(name, email, phone, password, confirmpassword, weightNum, gender);
     } catch (e) {
-      Alert.alert('Erro', parseApiError(e, 'Erro ao cadastrar'));
+      show('Erro', parseApiError(e, 'Erro ao cadastrar'));
     } finally {
       setLoading(false);
     }
@@ -62,6 +74,37 @@ export default function RegisterScreen({ navigation }) {
             onChangeText={(v) => setField(field, v)}
           />
         ))}
+
+        <TextInput
+          style={styles.input}
+          placeholder="Peso (kg)"
+          placeholderTextColor="#999"
+          keyboardType="decimal-pad"
+          value={form.weight}
+          onChangeText={(v) => setField('weight', v)}
+        />
+
+        <Text style={styles.genderLabel}>Sexo</Text>
+        <View style={styles.genderRow}>
+          <TouchableOpacity
+            style={[styles.genderButton, gender === 'M' && styles.genderButtonActive]}
+            onPress={() => setGender('M')}
+          >
+            <Ionicons name="male-outline" size={18} color={gender === 'M' ? '#121212' : '#aaa'} />
+            <Text style={[styles.genderButtonText, gender === 'M' && styles.genderButtonTextActive]}>
+              Masculino
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.genderButton, gender === 'F' && styles.genderButtonActive]}
+            onPress={() => setGender('F')}
+          >
+            <Ionicons name="female-outline" size={18} color={gender === 'F' ? '#121212' : '#aaa'} />
+            <Text style={[styles.genderButtonText, gender === 'F' && styles.genderButtonTextActive]}>
+              Feminino
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.passwordContainer}>
           <TextInput
@@ -104,4 +147,3 @@ export default function RegisterScreen({ navigation }) {
     </KeyboardAvoidingView>
   );
 }
-

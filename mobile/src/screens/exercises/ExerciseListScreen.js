@@ -1,13 +1,15 @@
 import { useState, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  Alert, ActivityIndicator
+  ActivityIndicator
 } from 'react-native';
 import styles from './ExerciseListScreen.styles';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../../services/api';
+import { useModal } from '../../context/ModalContext';
 
 export default function ExerciseListScreen({ navigation }) {
+  const { show } = useModal();
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,14 +25,14 @@ export default function ExerciseListScreen({ navigation }) {
       const res = await api.get('/exercises/');
       setExercises(res.data);
     } catch (e) {
-      Alert.alert('Erro', 'Não foi possível carregar os exercícios');
+      show('Erro', 'Não foi possível carregar os exercícios');
     } finally {
       setLoading(false);
     }
   }
 
   async function handleDelete(id) {
-    Alert.alert('Remover', 'Tem certeza que deseja remover este exercício?', [
+    show('Remover', 'Tem certeza que deseja remover este exercício?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Remover',
@@ -40,7 +42,7 @@ export default function ExerciseListScreen({ navigation }) {
             await api.delete(`/exercises/${id}`);
             setExercises(prev => prev.filter(e => e.id !== id));
           } catch {
-            Alert.alert('Erro', 'Não foi possível remover');
+            show('Erro', 'Não foi possível remover');
           }
         },
       },
@@ -49,7 +51,7 @@ export default function ExerciseListScreen({ navigation }) {
 
   function renderItem({ item }) {
     return (
-      <View style={styles.card}>
+      <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('ExerciseDetail', { exercise: item })}>
         <View style={styles.cardInfo}>
           <Text style={styles.cardName}>{item.name}</Text>
           <Text style={styles.cardDetail}>{item.sets} séries · {item.reps} reps · {item.weight}kg</Text>
@@ -62,7 +64,7 @@ export default function ExerciseListScreen({ navigation }) {
             <Text style={styles.deleteBtn}>Remover</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   }
 

@@ -30,6 +30,43 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
   },
+  genderLabel: {
+    width: '100%',
+    color: '#aaa',
+    fontSize: 13,
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  genderRow: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  genderButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#1E1E1E',
+    borderRadius: 10,
+    paddingVertical: 13,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  genderButtonActive: {
+    backgroundColor: '#E8FF47',
+    borderColor: '#E8FF47',
+  },
+  genderButtonText: {
+    color: '#aaa',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  genderButtonTextActive: {
+    color: '#121212',
+  },
   passwordContainer: {
     width: '100%',
     flexDirection: 'row',

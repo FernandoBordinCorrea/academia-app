@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView
+  ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import styles from './LoginScreen.styles';
 import { parseApiError } from '../../utils/errorMessage';
 import { Ionicons } from '@expo/vector-icons';
+import { useModal } from '../../context/ModalContext';
 
 export default function LoginScreen({ navigation }) {
+  const { show } = useModal();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,14 +19,14 @@ export default function LoginScreen({ navigation }) {
 
   async function handleLogin() {
     if (!email || !password) {
-      Alert.alert('Erro', 'Preencha todos os campos');
+      show('Erro', 'Preencha todos os campos');
       return;
     }
     try {
       setLoading(true);
       await login(email, password);
     } catch (e) {
-      Alert.alert('Erro', parseApiError(e, 'Erro ao fazer login'));
+      show('Erro', parseApiError(e, 'Erro ao fazer login'));
     } finally {
       setLoading(false);
     }
