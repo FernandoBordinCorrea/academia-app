@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env
+
+# Node / Expo
+node_modules/
+.expo/
+dist/
+build/
+
+# Mobile old backup
+mobile_old/
+
+# Banco de dados local
+*.db
+
+# Alembic não precisa commitar o banco
+*.db-journal
+
+# OS
+.DS_Store
+Thumbs.db

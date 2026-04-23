@@ -5,3 +5,6 @@ python-jose[cryptography]
 bcrypt
 python-multipart
 python-dotenv
+alembic
+psycopg2-binary
+email-validator
