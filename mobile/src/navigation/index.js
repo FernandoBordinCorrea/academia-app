@@ -14,6 +14,7 @@ import WorkoutFormScreen from '../screens/workouts/WorkoutFormScreen';
 import WorkoutDetailScreen from '../screens/workouts/WorkoutDetailScreen';
 import WorkoutSessionScreen from '../screens/workouts/WorkoutSessionScreen';
 import CalendarScreen from '../screens/calendar/CalendarScreen';
+import DetectorScreen from '../screens/detector/DetectorScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -44,6 +45,7 @@ function AppStack() {
       <Stack.Screen name="WorkoutDetail" component={WorkoutDetailScreen} options={{ title: '' }} />
       <Stack.Screen name="WorkoutSession" component={WorkoutSessionScreen} options={{ title: 'Em andamento', headerBackVisible: false }} />
       <Stack.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendário' }} />
+      <Stack.Screen name="Detector" component={DetectorScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

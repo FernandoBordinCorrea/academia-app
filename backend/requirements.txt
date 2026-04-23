@@ -8,3 +8,6 @@ python-dotenv
 alembic
 psycopg2-binary
 email-validator
+mediapipe==0.10.14
+opencv-python-headless
+scikit-learn
