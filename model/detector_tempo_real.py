@@ -1,4 +1,3 @@
-# 5_detector_tempo_real.py
 import cv2
 import pickle
 import numpy as np
@@ -12,9 +11,10 @@ modelo  = dados["model"]
 scaler  = dados["scaler"]
 classes = dados["classes"]
 
-THRESHOLD_REPOUSO = 20   # mesmo valor do treino
-MIN_FRAMES_REP    = 10   # ignora movimentos muito curtos (ruído)
-RESULTADO_FRAMES  = 90   # ~3s a 30fps — tempo de exibição do resultado
+# ── Constantes ────────────────────────────────────────────────────────────────
+THRESHOLD_REPOUSO = 20
+MIN_FRAMES_REP    = 10
+RESULTADO_FRAMES  = 90   # ~3s a 30fps
 
 # ── Índices MediaPipe Pose ────────────────────────────────────────────────────
 MP_OMBRO_E    = 11; MP_OMBRO_D    = 12
@@ -33,7 +33,6 @@ def ponto(lm, idx, w, h):
     return [lm[idx].x * w, lm[idx].y * h]
 
 def classificar_rep(frames_rep):
-    """Classifica a repetição usando o frame de pico (ângulo máximo do braço)."""
     peak_features = max(frames_rep, key=lambda x: x[0])[1]
     features = scaler.transform(peak_features) if scaler else peak_features
     pred      = modelo.predict(features)[0]
@@ -43,8 +42,7 @@ def classificar_rep(frames_rep):
     cor   = (0, 210, 0) if pred == 0 else (0, 0, 220)
     return label, cor
 
-# ── Camera e MediaPipe ────────────────────────────────────────────────────────
-CAMERA_INDEX   = 0
+# ── Camera ────────────────────────────────────────────────────────────────────
 LARGURA_JANELA = 1280
 ALTURA_JANELA  = 720
 
@@ -53,7 +51,7 @@ mp_draw  = mp.solutions.drawing_utils
 mp_style = mp.solutions.drawing_styles
 
 cap = None
-for idx in range(CAMERA_INDEX, CAMERA_INDEX + 3):
+for idx in range(0, 4):
     c = cv2.VideoCapture(idx)
     if c.isOpened():
         cap = c
@@ -62,7 +60,7 @@ for idx in range(CAMERA_INDEX, CAMERA_INDEX + 3):
     c.release()
 
 if cap is None:
-    print("ERRO: Nenhuma câmera encontrada. Verifique se o usuário está no grupo 'video'.")
+    print("ERRO: Nenhuma câmera encontrada.")
     print("      Execute: sudo usermod -aG video $USER  e faça login novamente.")
     exit(1)
 
@@ -73,13 +71,13 @@ NOME_JANELA = "Detector — Elevacao Frontal  [Q para sair]"
 cv2.namedWindow(NOME_JANELA, cv2.WINDOW_NORMAL)
 cv2.resizeWindow(NOME_JANELA, LARGURA_JANELA, ALTURA_JANELA)
 
-# ── Estado da máquina ─────────────────────────────────────────────────────────
-estado         = "AGUARDANDO"   # AGUARDANDO | EM_EXECUCAO
-frames_rep     = []             # (max_angulo, features_raw) por frame
-ultimo_label   = ""
-ultimo_cor     = (160, 160, 160)
+# ── Estado ────────────────────────────────────────────────────────────────────
+estado          = "AGUARDANDO"
+frames_rep      = []
+ultimo_label    = ""
+ultimo_cor      = (160, 160, 160)
 resultado_timer = 0
-contador_reps  = 0
+contador_reps   = 0
 
 with mp_pose.Pose(min_detection_confidence=0.6, min_tracking_confidence=0.6) as pose:
     while cap.isOpened():
@@ -122,13 +120,9 @@ with mp_pose.Pose(min_detection_confidence=0.6, min_tracking_confidence=0.6) as 
             ang_cot_d   = calcular_angulo(ombro_d, cotovelo_d, punho_d)
             altura_ref  = abs(ombro_e[1] - quadril_e[1]) or 1
 
-            detalhes = (f"Braco E:{ang_braco_e:.0f}  D:{ang_braco_d:.0f}  "
-                        f"Cot E:{ang_cot_e:.0f}  D:{ang_cot_d:.0f}")
-
             em_repouso = max(ang_braco_e, ang_braco_d) < THRESHOLD_REPOUSO
 
             if em_repouso:
-                # Voltou ao repouso — verifica se veio de uma execução
                 if estado == "EM_EXECUCAO":
                     if len(frames_rep) >= MIN_FRAMES_REP:
                         ultimo_label, ultimo_cor = classificar_rep(frames_rep)
@@ -136,9 +130,7 @@ with mp_pose.Pose(min_detection_confidence=0.6, min_tracking_confidence=0.6) as 
                         contador_reps  += 1
                     frames_rep = []
                 estado = "AGUARDANDO"
-
             else:
-                # Braços levantados — coleta o frame
                 if estado == "AGUARDANDO":
                     estado     = "EM_EXECUCAO"
                     frames_rep = []
@@ -152,10 +144,13 @@ with mp_pose.Pose(min_detection_confidence=0.6, min_tracking_confidence=0.6) as 
                 ]])
                 frames_rep.append((max(ang_braco_e, ang_braco_d), features_raw))
 
-        # ── Decide o que mostrar ──────────────────────────────────────────────
+            detalhes = (f"Braco E:{ang_braco_e:.0f}  D:{ang_braco_d:.0f}  "
+                        f"Cot E:{ang_cot_e:.0f}  D:{ang_cot_d:.0f}")
+
+        # ── Label principal ───────────────────────────────────────────────────
         if estado == "EM_EXECUCAO":
             label = "Executando..."
-            cor   = (30, 200, 230)  # amarelo-ciano: neutro, sem julgamento
+            cor   = (30, 200, 230)
         elif resultado_timer > 0:
             label = ultimo_label
             cor   = ultimo_cor
@@ -165,23 +160,21 @@ with mp_pose.Pose(min_detection_confidence=0.6, min_tracking_confidence=0.6) as 
             cor   = (160, 160, 160)
         else:
             label = "Sem pose detectada"
-            cor   = (160, 160, 160)
+            cor   = (80, 80, 220)
 
         # ── Overlay ───────────────────────────────────────────────────────────
         cv2.rectangle(frame, (0, 0), (w, 65), (20, 20, 20), -1)
         cv2.putText(frame, label, (15, 47),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, cor, 3, cv2.LINE_AA)
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.1, cor, 3, cv2.LINE_AA)
 
-        # Contador de repetições (canto superior direito)
         rep_txt = f"Reps: {contador_reps}"
-        cv2.putText(frame, rep_txt, (w - 160, 47),
+        cv2.putText(frame, rep_txt, (w - 170, 47),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.0, (220, 220, 220), 2, cv2.LINE_AA)
 
-        # Ângulos (rodapé)
         if detalhes:
             cv2.rectangle(frame, (0, h - 35), (w, h), (20, 20, 20), -1)
             cv2.putText(frame, detalhes, (10, h - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (220, 220, 220), 1, cv2.LINE_AA)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, (220, 220, 220), 1, cv2.LINE_AA)
 
         cv2.imshow(NOME_JANELA, frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
