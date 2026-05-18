@@ -28,6 +28,7 @@ export default function DetectorScreen({ navigation }) {
   const [videoUri, setVideoUri]   = useState(null);
   const [showVideo, setShowVideo] = useState(false);
   const [torchOn, setTorchOn]     = useState(false);
+  const [exercicio, setExercicio] = useState('frontraise');
 
   const cameraRef             = useRef(null);
   const timerRef              = useRef(null);
@@ -136,7 +137,7 @@ export default function DetectorScreen({ navigation }) {
       const formData = new FormData();
       formData.append('video', { uri, type: 'video/mp4', name: 'exercise.mp4' });
 
-      const response = await fetch(`${appConfig.API_URL}/detector/analyze`, {
+      const response = await fetch(`${appConfig.API_URL}/detector/analyze?exercise=${exercicio}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
@@ -201,9 +202,28 @@ export default function DetectorScreen({ navigation }) {
       {tela === 'idle' && (
         <>
           <View style={styles.topOverlay}>
-            <Text style={styles.instrucaoTitle}>Elevação Frontal</Text>
+            <View style={styles.exercicioSelector}>
+              <TouchableOpacity
+                style={[styles.exercicioBtn, exercicio === 'frontraise' && styles.exercicioBtnAtivo]}
+                onPress={() => setExercicio('frontraise')}
+              >
+                <Text style={[styles.exercicioBtnText, exercicio === 'frontraise' && styles.exercicioBtnTextAtivo]}>
+                  Elevação Frontal
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.exercicioBtn, exercicio === 'biceps' && styles.exercicioBtnAtivo]}
+                onPress={() => setExercicio('biceps')}
+              >
+                <Text style={[styles.exercicioBtnText, exercicio === 'biceps' && styles.exercicioBtnTextAtivo]}>
+                  Rosca Direta
+                </Text>
+              </TouchableOpacity>
+            </View>
             <Text style={styles.instrucaoText}>
-              Posicione a câmera de lado e fique de lateral para ela
+              {exercicio === 'frontraise'
+                ? 'Posicione a câmera de lado e fique de lateral para ela'
+                : 'Posicione a câmera de lado e fique de lateral para ela'}
             </Text>
           </View>
           <View style={styles.bottomOverlay}>

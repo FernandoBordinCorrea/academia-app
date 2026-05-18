@@ -68,10 +68,28 @@ export default StyleSheet.create({
   },
 
   // ── Idle ──────────────────────────────────────────────────────────────────
-  instrucaoTitle: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
+  exercicioSelector: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 10,
+    padding: 4,
+    gap: 4,
+  },
+  exercicioBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  exercicioBtnAtivo: {
+    backgroundColor: '#E8FF47',
+  },
+  exercicioBtnText: {
+    color: '#aaa',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  exercicioBtnTextAtivo: {
+    color: '#121212',
   },
   instrucaoText: {
     color: '#ccc',
