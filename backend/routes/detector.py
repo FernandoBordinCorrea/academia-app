@@ -7,35 +7,35 @@ import tempfile
 import cv2
 import mediapipe as mp
 import numpy as np
-from fastapi import APIRouter, File, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, File, Query, UploadFile, WebSocket, WebSocketDisconnect
 
-# ── Modelo ────────────────────────────────────────────────────────────────────
-_MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'model', 'modelo_frontraise.pkl')
+# ── Carregar modelos ──────────────────────────────────────────────────────────
+def _load_model(filename):
+    path = os.path.join(os.path.dirname(__file__), '..', '..', 'model', filename)
+    with open(path, 'rb') as f:
+        return pickle.load(f)
 
-with open(_MODEL_PATH, 'rb') as f:
-    _dados = pickle.load(f)
+_fr = _load_model('modelo_frontraise.pkl')
+_bc = _load_model('modelo_biceps.pkl')
 
-_modelo  = _dados['model']
-_scaler  = _dados['scaler']
-_classes = _dados['classes']
-
-# ── Constantes ────────────────────────────────────────────────────────────────
+# ── Índices MediaPipe Pose ────────────────────────────────────────────────────
 MP_OMBRO_E    = 11; MP_OMBRO_D    = 12
 MP_COTOVELO_E = 13; MP_COTOVELO_D = 14
 MP_PUNHO_E    = 15; MP_PUNHO_D    = 16
 MP_QUADRIL_E  = 23; MP_QUADRIL_D  = 24
 
-THRESHOLD_REPOUSO   = 20
-MIN_FRAMES_REP_WS   = 3    # WebSocket: ~1-2fps efetivos
-MIN_FRAMES_REP_VID  = 5    # Vídeo: ~10fps efetivos (1 a cada 3 frames de 30fps)
-RESULTADO_FRAMES    = 25
-FRAME_SKIP          = 3    # Processa 1 a cada 3 frames do vídeo
+# ── Constantes ────────────────────────────────────────────────────────────────
+MIN_FRAMES_REP_WS  = 3
+MIN_FRAMES_REP_VID = 5
+MIN_FRAMES_REP_VID_BICEPS = 3
+RESULTADO_FRAMES   = 25
+FRAME_SKIP         = 3
 
 router = APIRouter()
 _mp_pose = mp.solutions.pose
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-def _ponto(lm, idx, w, h):
+# ── Helpers geométricos ───────────────────────────────────────────────────────
+def _pt(lm, idx, w, h):
     return [lm[idx].x * w, lm[idx].y * h]
 
 def _angulo(a, b, c):
@@ -44,25 +44,16 @@ def _angulo(a, b, c):
     ang = np.abs(ang * 180 / np.pi)
     return 360 - ang if ang > 180 else ang
 
-def _classificar(frames_rep):
-    peak     = max(frames_rep, key=lambda x: x[0])
-    features = _scaler.transform(peak[1]) if _scaler else peak[1]
-    pred     = _modelo.predict(features)[0]
-    prob     = _modelo.predict_proba(features)[0]
-    confianca = prob[pred] * 100
-    label = f"{_classes[pred].upper()}  {confianca:.0f}%"
-    cor   = 'verde' if pred == 0 else 'vermelho'
-    return label, cor
-
-def _extrair_features(lm, w, h):
-    ombro_e    = _ponto(lm, MP_OMBRO_E,    w, h)
-    cotovelo_e = _ponto(lm, MP_COTOVELO_E, w, h)
-    punho_e    = _ponto(lm, MP_PUNHO_E,    w, h)
-    quadril_e  = _ponto(lm, MP_QUADRIL_E,  w, h)
-    ombro_d    = _ponto(lm, MP_OMBRO_D,    w, h)
-    cotovelo_d = _ponto(lm, MP_COTOVELO_D, w, h)
-    punho_d    = _ponto(lm, MP_PUNHO_D,    w, h)
-    quadril_d  = _ponto(lm, MP_QUADRIL_D,  w, h)
+# ── Extração de features por exercício ───────────────────────────────────────
+def _extrair_frontraise(lm, w, h):
+    ombro_e    = _pt(lm, MP_OMBRO_E,    w, h)
+    cotovelo_e = _pt(lm, MP_COTOVELO_E, w, h)
+    punho_e    = _pt(lm, MP_PUNHO_E,    w, h)
+    quadril_e  = _pt(lm, MP_QUADRIL_E,  w, h)
+    ombro_d    = _pt(lm, MP_OMBRO_D,    w, h)
+    cotovelo_d = _pt(lm, MP_COTOVELO_D, w, h)
+    punho_d    = _pt(lm, MP_PUNHO_D,    w, h)
+    quadril_d  = _pt(lm, MP_QUADRIL_D,  w, h)
 
     ang_braco_e = _angulo(quadril_e, ombro_e, cotovelo_e)
     ang_braco_d = _angulo(quadril_d, ombro_d, cotovelo_d)
@@ -70,18 +61,76 @@ def _extrair_features(lm, w, h):
     ang_cot_d   = _angulo(ombro_d, cotovelo_d, punho_d)
     altura_ref  = abs(ombro_e[1] - quadril_e[1]) or 1
 
-    features_raw = np.array([[
+    features = np.array([[
         ang_braco_e, ang_cot_e,
         ang_braco_d, ang_cot_d,
         (punho_e[1] - ombro_e[1]) / altura_ref,
         (punho_d[1] - ombro_d[1]) / altura_ref,
         abs(ang_braco_e - ang_braco_d),
     ]])
-    ang_max = max(ang_braco_e, ang_braco_d)
-    return features_raw, ang_max
+    intensity = max(ang_braco_e, ang_braco_d)
+    return features, intensity
+
+def _extrair_biceps(lm, w, h):
+    # Usa o lado com maior visibilidade (câmera de lado, um braço ocluído)
+    vis_e = lm[MP_COTOVELO_E].visibility
+    vis_d = lm[MP_COTOVELO_D].visibility
+
+    if vis_d >= vis_e:
+        ombro   = _pt(lm, MP_OMBRO_D,    w, h)
+        cotovelo = _pt(lm, MP_COTOVELO_D, w, h)
+        punho   = _pt(lm, MP_PUNHO_D,    w, h)
+        quadril = _pt(lm, MP_QUADRIL_D,  w, h)
+    else:
+        ombro   = _pt(lm, MP_OMBRO_E,    w, h)
+        cotovelo = _pt(lm, MP_COTOVELO_E, w, h)
+        punho   = _pt(lm, MP_PUNHO_E,    w, h)
+        quadril = _pt(lm, MP_QUADRIL_E,  w, h)
+
+    ang_cot   = _angulo(ombro, cotovelo, punho)
+    ang_braco = _angulo(quadril, ombro, cotovelo)
+    altura_ref = abs(ombro[1] - quadril[1]) or 1
+    alt_punho  = (punho[1] - ombro[1]) / altura_ref
+
+    features  = np.array([[ang_cot, ang_braco, alt_punho]])
+    # intensity sobe com a flexão: 0 = braço estendido, ~130 = máximo
+    intensity = 180.0 - ang_cot
+    return features, intensity
+
+# ── Configuração por exercício ────────────────────────────────────────────────
+_EX = {
+    'frontraise': {
+        'model':      _fr['model'],
+        'scaler':     _fr['scaler'],
+        'classes':    _fr['classes'],
+        'extract':    _extrair_frontraise,
+        'is_repouso': lambda i: i < 20,   # ang_braco < 20° = braço abaixado
+        'min_frames': MIN_FRAMES_REP_VID,
+    },
+    'biceps': {
+        'model':      _bc['model'],
+        'scaler':     _bc['scaler'],
+        'classes':    _bc['classes'],
+        'extract':    _extrair_biceps,
+        'is_repouso': lambda i: i < 50,   # 180-ang_cot < 50 → ang_cot > 130° = braço suficientemente estendido
+        'min_frames': MIN_FRAMES_REP_VID_BICEPS,
+    },
+}
+
+# ── Classificação ─────────────────────────────────────────────────────────────
+def _classificar(frames_rep, cfg):
+    peak     = max(frames_rep, key=lambda x: x[0])
+    features = cfg['scaler'].transform(peak[1]) if cfg['scaler'] else peak[1]
+    pred     = cfg['model'].predict(features)[0]
+    prob     = cfg['model'].predict_proba(features)[0]
+    confianca = prob[pred] * 100
+    label = f"{cfg['classes'][pred].upper()}  {confianca:.0f}%"
+    cor   = 'verde' if pred == 0 else 'vermelho'
+    return label, cor
 
 # ── Análise de vídeo ──────────────────────────────────────────────────────────
-def _processar_video(path: str) -> dict:
+def _processar_video(path: str, exercise: str) -> dict:
+    cfg = _EX.get(exercise, _EX['frontraise'])
     cap = cv2.VideoCapture(path)
     if not cap.isOpened():
         return {'reps': 0, 'corretos': 0, 'incorretos': 0, 'detalhes': []}
@@ -109,13 +158,13 @@ def _processar_video(path: str) -> dict:
             if not res.pose_landmarks:
                 continue
 
-            features_raw, ang_max = _extrair_features(res.pose_landmarks.landmark, w, h)
-            em_repouso = ang_max < THRESHOLD_REPOUSO
+            features_raw, intensity = cfg['extract'](res.pose_landmarks.landmark, w, h)
+            em_repouso = cfg['is_repouso'](intensity)
 
             if em_repouso:
                 if estado == 'EM_EXECUCAO':
-                    if len(frames_rep) >= MIN_FRAMES_REP_VID:
-                        label, cor = _classificar(frames_rep)
+                    if len(frames_rep) >= cfg['min_frames']:
+                        label, cor = _classificar(frames_rep, cfg)
                         contador_reps += 1
                         reps_detalhes.append({
                             'rep':     contador_reps,
@@ -129,7 +178,7 @@ def _processar_video(path: str) -> dict:
                 if estado == 'AGUARDANDO':
                     estado     = 'EM_EXECUCAO'
                     frames_rep = []
-                frames_rep.append((ang_max, features_raw))
+                frames_rep.append((intensity, features_raw))
 
     cap.release()
 
@@ -137,21 +186,24 @@ def _processar_video(path: str) -> dict:
     incorretos = len(reps_detalhes) - corretos
 
     return {
-        'reps':      contador_reps,
-        'corretos':  corretos,
+        'reps':       contador_reps,
+        'corretos':   corretos,
         'incorretos': incorretos,
-        'detalhes':  reps_detalhes,
+        'detalhes':   reps_detalhes,
     }
 
 
 @router.post('/detector/analyze')
-async def analyze_video(video: UploadFile = File(...)):
+async def analyze_video(
+    video: UploadFile = File(...),
+    exercise: str = Query('frontraise', pattern='^(frontraise|biceps)$'),
+):
     with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as tmp:
         tmp.write(await video.read())
         tmp_path = tmp.name
 
     try:
-        result = await asyncio.to_thread(_processar_video, tmp_path)
+        result = await asyncio.to_thread(_processar_video, tmp_path, exercise)
     finally:
         try:
             os.unlink(tmp_path)
@@ -161,10 +213,11 @@ async def analyze_video(video: UploadFile = File(...)):
     return result
 
 
-# ── WebSocket (mantido para compatibilidade) ──────────────────────────────────
+# ── WebSocket (mantido para compatibilidade — usa frontraise) ─────────────────
 @router.websocket('/ws/detector')
 async def detector_ws(websocket: WebSocket):
     await websocket.accept()
+    cfg = _EX['frontraise']
 
     estado          = 'AGUARDANDO'
     frames_rep      = []
@@ -197,13 +250,13 @@ async def detector_ws(websocket: WebSocket):
                         await websocket.send_json({'state': 'AGUARDANDO', 'label': 'Sem pose detectada', 'cor': 'cinza', 'reps': contador_reps})
                     continue
 
-                features_raw, ang_max = _extrair_features(res.pose_landmarks.landmark, w, h)
-                em_repouso = ang_max < THRESHOLD_REPOUSO
+                features_raw, intensity = cfg['extract'](res.pose_landmarks.landmark, w, h)
+                em_repouso = cfg['is_repouso'](intensity)
 
                 if em_repouso:
                     if estado == 'EM_EXECUCAO':
                         if len(frames_rep) >= MIN_FRAMES_REP_WS:
-                            ultimo_label, ultimo_cor = _classificar(frames_rep)
+                            ultimo_label, ultimo_cor = _classificar(frames_rep, cfg)
                             resultado_timer = RESULTADO_FRAMES
                             contador_reps  += 1
                         frames_rep = []
@@ -218,7 +271,7 @@ async def detector_ws(websocket: WebSocket):
                     if estado == 'AGUARDANDO':
                         estado     = 'EM_EXECUCAO'
                         frames_rep = []
-                    frames_rep.append((ang_max, features_raw))
+                    frames_rep.append((intensity, features_raw))
                     await websocket.send_json({'state': 'EM_EXECUCAO', 'label': 'Executando...', 'cor': 'amarelo', 'reps': contador_reps})
 
         except WebSocketDisconnect:
