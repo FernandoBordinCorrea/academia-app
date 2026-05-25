@@ -1,5 +1,4 @@
-// Troque pelo IP da sua máquina quando testar no celular físico
-// Em produção, este valor virá de variáveis de ambiente do Azure
-const API_URL = 'http://192.168.143.134:8000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const WS_URL  = process.env.EXPO_PUBLIC_WS_URL;
 
-export default { API_URL };
+export default { API_URL, WS_URL };

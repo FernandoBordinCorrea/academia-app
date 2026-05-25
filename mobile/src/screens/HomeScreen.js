@@ -64,11 +64,11 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.cardTitle}>Calendário</Text>
           <Text style={styles.cardSub}>Histórico de treinos</Text>
         </TouchableOpacity>
-        <View style={[styles.card, styles.cardDisabled]}>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Detector')}>
           <Ionicons name="camera-outline" size={32} color="#E8FF47" style={styles.cardIcon} />
           <Text style={styles.cardTitle}>Detector</Text>
-          <Text style={styles.cardSub}>Em breve</Text>
-        </View>
+          <Text style={styles.cardSub}>Elevação Frontal</Text>
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={logout}>
