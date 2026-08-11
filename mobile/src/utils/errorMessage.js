@@ -10,11 +10,12 @@ function friendlyField(field) {
   return FIELD_NAMES[field] || field;
 }
 
-function resolveMessage(type, field) {
+function resolveMessage(type, field, msg) {
   // Pydantic v2
   if (type === 'missing') return `O campo ${friendlyField(field)} é obrigatório`;
   if (type === 'string_too_short') return `O campo ${friendlyField(field)} é muito curto`;
   if (type === 'value_error' && field === 'email') return 'Digite um e-mail válido';
+  if (type === 'value_error' && msg) return msg.replace(/^Value error,\s*/, '');
 
   // Pydantic v1 (fallback)
   if (type === 'value_error.email') return 'Digite um e-mail válido';
@@ -36,7 +37,7 @@ export function parseApiError(error, fallback = 'Algo deu errado. Tente novament
     const field = first?.loc?.[first.loc.length - 1];
     const type = first?.type;
 
-    return resolveMessage(type, field) ?? fallback;
+    return resolveMessage(type, field, first?.msg) ?? fallback;
   }
 
   return fallback;
