@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.env
+*.db
+*.sqlite3
+alembic/versions/__pycache__/
+.git/
+mobile/
+mobile_old/
+node_modules/
