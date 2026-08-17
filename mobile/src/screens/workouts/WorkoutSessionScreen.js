@@ -1,11 +1,61 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { AppState, Platform, View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import styles from './WorkoutSessionScreen.styles';
 import { useModal } from '../../context/ModalContext';
+
+// No Expo Go o módulo nativo do notifee nunca existe — nem tenta carregar o
+// pacote nesse caso (evita o overlay de erro do Metro na primeira carga).
+const IS_EXPO_GO = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+async function startWorkoutNotification(startTime) {
+  if (Platform.OS !== 'android' || IS_EXPO_GO) return;
+
+  try {
+    const notifee = require('@notifee/react-native').default;
+    const { AndroidImportance, AndroidColor } = require('@notifee/react-native');
+
+    await notifee.requestPermission();
+    const channelId = await notifee.createChannel({
+      id: 'workout-timer',
+      name: 'Cronômetro de treino',
+      importance: AndroidImportance.LOW,
+    });
+
+    await notifee.displayNotification({
+      title: 'Treino em andamento',
+      body: 'Toque para voltar ao treino',
+      android: {
+        channelId,
+        asForegroundService: true,
+        ongoing: true,
+        colorized: true,
+        color: AndroidColor.BLUE,
+        smallIcon: 'ic_launcher',
+        showChronometer: true,
+        chronometerDirection: 'up',
+        timestamp: startTime,
+        pressAction: { id: 'default' },
+      },
+    });
+  } catch {
+    // módulo nativo do notifee indisponível (ex: Expo Go) — segue sem o chip
+  }
+}
+
+async function stopWorkoutNotification() {
+  if (Platform.OS !== 'android' || IS_EXPO_GO) return;
+  try {
+    const notifee = require('@notifee/react-native').default;
+    await notifee.stopForegroundService();
+  } catch {
+    // idem — nada a parar se o serviço nunca chegou a iniciar
+  }
+}
 
 function formatTime(seconds) {
   const h = Math.floor(seconds / 3600);
@@ -33,13 +83,27 @@ export default function WorkoutSessionScreen({ route, navigation }) {
   const [fromLastSession, setFromLastSession] = useState({});
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef(null);
+  const startTimeRef = useRef(Date.now());
 
   useEffect(() => {
     fetchLastWeights();
-    intervalRef.current = setInterval(() => {
-      setElapsed((prev) => prev + 1);
-    }, 1000);
-    return () => clearInterval(intervalRef.current);
+    startWorkoutNotification(startTimeRef.current);
+
+    const updateElapsed = () => {
+      setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+    };
+
+    intervalRef.current = setInterval(updateElapsed, 1000);
+
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') updateElapsed();
+    });
+
+    return () => {
+      clearInterval(intervalRef.current);
+      subscription.remove();
+      stopWorkoutNotification();
+    };
   }, []);
 
   async function fetchLastWeights() {
@@ -74,9 +138,11 @@ export default function WorkoutSessionScreen({ route, navigation }) {
 
   async function handleFinish() {
     clearInterval(intervalRef.current);
+    stopWorkoutNotification();
+    const finalElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
 
     const calories = user?.weight && user?.gender
-      ? calcCalories(elapsed, user.weight, user.gender)
+      ? calcCalories(finalElapsed, user.weight, user.gender)
       : null;
 
     const logs = workout.items.map((item) => ({
@@ -88,7 +154,7 @@ export default function WorkoutSessionScreen({ route, navigation }) {
     try {
       await api.post('/sessions/', {
         workout_id: workout.id,
-        duration_seconds: elapsed,
+        duration_seconds: finalElapsed,
         calories_burned: calories,
         logs,
       });
@@ -99,7 +165,7 @@ export default function WorkoutSessionScreen({ route, navigation }) {
     const caloriesLine = calories !== null ? `\nCalorias: ~${calories} kcal` : '';
     show(
       'Treino finalizado!',
-      `Duração: ${formatTime(elapsed)}${caloriesLine}`,
+      `Duração: ${formatTime(finalElapsed)}${caloriesLine}`,
       [{ text: 'OK', onPress: () => navigation.goBack() }]
     );
   }
