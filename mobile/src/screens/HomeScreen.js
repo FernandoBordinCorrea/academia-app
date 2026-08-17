@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import api from '../services/api';
 import styles from './HomeScreen.styles';
+import TimerChip from '../components/TimerChip';
 
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -29,8 +30,13 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.date}>{formatDate(today)}</Text>
-      <Text style={styles.greeting}>Olá, {user?.name?.split(' ')[0]}</Text>
+      <View style={styles.topRow}>
+        <View style={styles.topRowText}>
+          <Text style={styles.date}>{formatDate(today)}</Text>
+          <Text style={styles.greeting}>Olá, {user?.name?.split(' ')[0]}</Text>
+        </View>
+        <TimerChip />
+      </View>
       <Text style={styles.subtitle}>O que vamos treinar hoje?</Text>
 
       <View style={styles.statsRow}>

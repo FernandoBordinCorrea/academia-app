@@ -1,61 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import { AppState, Platform, View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import styles from './WorkoutSessionScreen.styles';
 import { useModal } from '../../context/ModalContext';
-
-// No Expo Go o módulo nativo do notifee nunca existe — nem tenta carregar o
-// pacote nesse caso (evita o overlay de erro do Metro na primeira carga).
-const IS_EXPO_GO = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
-
-async function startWorkoutNotification(startTime) {
-  if (Platform.OS !== 'android' || IS_EXPO_GO) return;
-
-  try {
-    const notifee = require('@notifee/react-native').default;
-    const { AndroidImportance, AndroidColor } = require('@notifee/react-native');
-
-    await notifee.requestPermission();
-    const channelId = await notifee.createChannel({
-      id: 'workout-timer',
-      name: 'Cronômetro de treino',
-      importance: AndroidImportance.LOW,
-    });
-
-    await notifee.displayNotification({
-      title: 'Treino em andamento',
-      body: 'Toque para voltar ao treino',
-      android: {
-        channelId,
-        asForegroundService: true,
-        ongoing: true,
-        colorized: true,
-        color: AndroidColor.BLUE,
-        smallIcon: 'ic_launcher',
-        showChronometer: true,
-        chronometerDirection: 'up',
-        timestamp: startTime,
-        pressAction: { id: 'default' },
-      },
-    });
-  } catch {
-    // módulo nativo do notifee indisponível (ex: Expo Go) — segue sem o chip
-  }
-}
-
-async function stopWorkoutNotification() {
-  if (Platform.OS !== 'android' || IS_EXPO_GO) return;
-  try {
-    const notifee = require('@notifee/react-native').default;
-    await notifee.stopForegroundService();
-  } catch {
-    // idem — nada a parar se o serviço nunca chegou a iniciar
-  }
-}
+import { useWorkoutSession } from '../../context/WorkoutSessionContext';
 
 function formatTime(seconds) {
   const h = Math.floor(seconds / 3600);
@@ -77,33 +28,14 @@ export default function WorkoutSessionScreen({ route, navigation }) {
   const { workout } = route.params;
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const [elapsed, setElapsed] = useState(0);
-  const [weights, setWeights] = useState({});
-  const [reps, setReps] = useState({});
-  const [fromLastSession, setFromLastSession] = useState({});
-  const [loading, setLoading] = useState(true);
-  const intervalRef = useRef(null);
-  const startTimeRef = useRef(Date.now());
+  const { session, elapsed, startSession, endSession, setWeight, setRep, getFinalElapsed } = useWorkoutSession();
+  const isResuming = session?.workout.id === workout.id;
+  const [loading, setLoading] = useState(!isResuming);
 
   useEffect(() => {
+    if (isResuming) return;
     fetchLastWeights();
-    startWorkoutNotification(startTimeRef.current);
-
-    const updateElapsed = () => {
-      setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
-    };
-
-    intervalRef.current = setInterval(updateElapsed, 1000);
-
-    const subscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active') updateElapsed();
-    });
-
-    return () => {
-      clearInterval(intervalRef.current);
-      subscription.remove();
-      stopWorkoutNotification();
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function fetchLastWeights() {
@@ -130,16 +62,12 @@ export default function WorkoutSessionScreen({ route, navigation }) {
       });
     }
 
-    setWeights(initialWeights);
-    setReps(initialReps);
-    setFromLastSession(lastSessionMap);
+    startSession(workout, { weights: initialWeights, reps: initialReps, fromLastSession: lastSessionMap });
     setLoading(false);
   }
 
   async function handleFinish() {
-    clearInterval(intervalRef.current);
-    stopWorkoutNotification();
-    const finalElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+    const finalElapsed = getFinalElapsed();
 
     const calories = user?.weight && user?.gender
       ? calcCalories(finalElapsed, user.weight, user.gender)
@@ -147,8 +75,8 @@ export default function WorkoutSessionScreen({ route, navigation }) {
 
     const logs = workout.items.map((item) => ({
       exercise_id: item.exercise_id,
-      weight_used: parseFloat(weights[item.exercise_id]) || item.exercise.weight,
-      reps_used: parseInt(reps[item.exercise_id]) || item.exercise.reps,
+      weight_used: parseFloat(session.weights[item.exercise_id]) || item.exercise.weight,
+      reps_used: parseInt(session.reps[item.exercise_id]) || item.exercise.reps,
     }));
 
     try {
@@ -162,6 +90,7 @@ export default function WorkoutSessionScreen({ route, navigation }) {
       // treino registrado localmente mesmo sem salvar no servidor
     }
 
+    endSession();
     const caloriesLine = calories !== null ? `\nCalorias: ~${calories} kcal` : '';
     show(
       'Treino finalizado!',
@@ -170,7 +99,7 @@ export default function WorkoutSessionScreen({ route, navigation }) {
     );
   }
 
-  if (loading) {
+  if (loading || !session) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator color="#E8FF47" size="large" />
@@ -181,6 +110,9 @@ export default function WorkoutSessionScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.timerContainer}>
+        <TouchableOpacity style={styles.minimizeBtn} onPress={() => navigation.goBack()} hitSlop={10}>
+          <Ionicons name="chevron-down" size={22} color="#aaa" />
+        </TouchableOpacity>
         <Text style={styles.timerLabel}>TEMPO DE TREINO</Text>
         <Text style={styles.timer}>{formatTime(elapsed)}</Text>
         <Text style={styles.workoutName}>{workout.name}</Text>
@@ -213,10 +145,8 @@ export default function WorkoutSessionScreen({ route, navigation }) {
                   <Ionicons name="flash-outline" size={14} color="#E8FF47" />
                   <TextInput
                     style={styles.weightInput}
-                    value={reps[item.exercise_id]}
-                    onChangeText={(v) =>
-                      setReps((prev) => ({ ...prev, [item.exercise_id]: v }))
-                    }
+                    value={session.reps[item.exercise_id]}
+                    onChangeText={(v) => setRep(item.exercise_id, v)}
                     keyboardType="number-pad"
                     selectTextOnFocus
                   />
@@ -227,10 +157,8 @@ export default function WorkoutSessionScreen({ route, navigation }) {
                   <MaterialCommunityIcons name="weight-kilogram" size={14} color="#E8FF47" />
                   <TextInput
                     style={styles.weightInput}
-                    value={weights[item.exercise_id]}
-                    onChangeText={(v) =>
-                      setWeights((prev) => ({ ...prev, [item.exercise_id]: v }))
-                    }
+                    value={session.weights[item.exercise_id]}
+                    onChangeText={(v) => setWeight(item.exercise_id, v)}
                     keyboardType="decimal-pad"
                     selectTextOnFocus
                   />
@@ -238,7 +166,7 @@ export default function WorkoutSessionScreen({ route, navigation }) {
                 </View>
               </View>
               <Text style={styles.weightHint}>
-                {fromLastSession[item.exercise_id] ? '↑ último treino' : '↑ peso cadastrado'}
+                {session.fromLastSession[item.exercise_id] ? '↑ último treino' : '↑ peso cadastrado'}
               </Text>
             </View>
           </View>

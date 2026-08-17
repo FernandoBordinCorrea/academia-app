@@ -13,6 +13,13 @@ export default StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#2a2a2a',
   },
+  minimizeBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 16,
+    padding: 6,
+    zIndex: 1,
+  },
   timerLabel: {
     color: '#aaa',
     fontSize: 11,

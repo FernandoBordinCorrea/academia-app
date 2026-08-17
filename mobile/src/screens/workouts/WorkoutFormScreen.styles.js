@@ -56,6 +56,10 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: '#2a2a2a',
   },
+  selectedItemActive: {
+    borderColor: '#E8FF47',
+    backgroundColor: '#242414',
+  },
   selectedOrder: {
     color: '#E8FF47',
     fontWeight: 'bold',
