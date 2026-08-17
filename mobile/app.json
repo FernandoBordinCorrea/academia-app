@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "com.fernandocorrea.academiaapp",
-      "versionCode": 4,
+      "versionCode": 5,
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
