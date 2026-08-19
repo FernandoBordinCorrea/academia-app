@@ -39,7 +39,15 @@
     },
     "plugins": [
       "expo-video",
-      "expo-dev-client"
+      "expo-dev-client",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Permite salvar os vídeos de exercício gravados na galeria.",
+          "savePhotosPermission": "Permite salvar os vídeos de exercício gravados na galeria.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ]
     ],
     "extra": {
       "eas": {

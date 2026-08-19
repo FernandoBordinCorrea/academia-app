@@ -280,6 +280,56 @@ export default StyleSheet.create({
     fontSize: 15,
   },
 
+  // ── Comparar com servidor local ──────────────────────────────────────────
+  compareBox: {
+    width: '100%',
+    marginTop: 24,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#2a2a2a',
+    gap: 10,
+  },
+  compareLabel: {
+    color: '#888',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  compareRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  compareInput: {
+    flex: 1,
+    backgroundColor: '#1E1E1E',
+    color: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  compareBtn: {
+    width: 46,
+    borderRadius: 10,
+    backgroundColor: '#E8FF47',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compareErro: {
+    color: '#F44336',
+    fontSize: 13,
+  },
+  compareResult: {
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 12,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#2a2a2a',
+    gap: 8,
+  },
+
   // ── Error ─────────────────────────────────────────────────────────────────
   erroText: {
     color: '#ccc',
@@ -313,6 +363,17 @@ export default StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 17,
     letterSpacing: 0.3,
+  },
+  salvoGaleriaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 12,
+  },
+  salvoGaleriaText: {
+    color: '#888',
+    fontSize: 12,
   },
 
   // ── Modal de vídeo ────────────────────────────────────────────────────────
