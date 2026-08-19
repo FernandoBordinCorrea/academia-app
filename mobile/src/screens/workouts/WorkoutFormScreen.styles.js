@@ -47,8 +47,6 @@ export default StyleSheet.create({
     fontSize: 14,
   },
   selectedItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#1E1E1E',
     borderRadius: 10,
     padding: 12,
@@ -59,6 +57,10 @@ export default StyleSheet.create({
   selectedItemActive: {
     borderColor: '#E8FF47',
     backgroundColor: '#242414',
+  },
+  selectedTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   selectedOrder: {
     color: '#E8FF47',
@@ -77,6 +79,38 @@ export default StyleSheet.create({
   },
   orderBtn: {
     padding: 4,
+  },
+  selectedGoalsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 10,
+    paddingLeft: 24,
+  },
+  goalField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  goalInput: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+    minWidth: 30,
+    maxWidth: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8FF47',
+    paddingVertical: 0,
+    textAlign: 'center',
+  },
+  goalLabel: {
+    color: '#aaa',
+    fontSize: 12,
+  },
+  goalDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: '#333',
   },
   availableItem: {
     flexDirection: 'row',

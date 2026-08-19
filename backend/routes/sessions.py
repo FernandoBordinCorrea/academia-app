@@ -4,8 +4,8 @@ from sqlalchemy import desc, func
 from typing import Dict, List
 from datetime import datetime
 from database import get_db
-from models.models import WorkoutSession, SessionExerciseLog, Workout, User
-from schemas.schemas import WorkoutSessionCreate, WorkoutSessionResponse
+from models.models import WorkoutSession, SessionExerciseLog, SessionExerciseSetLog, Workout, User
+from schemas.schemas import WorkoutSessionCreate, WorkoutSessionResponse, LastExerciseLogResponse
 from auth.auth import get_current_user
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
@@ -27,12 +27,22 @@ def create_session(data: WorkoutSessionCreate, db: Session = Depends(get_db), cu
     db.flush()
 
     for log in data.logs:
-        db.add(SessionExerciseLog(
+        exercise_log = SessionExerciseLog(
             session_id=session.id,
             exercise_id=log.exercise_id,
             weight_used=log.weight_used,
             reps_used=log.reps_used,
-        ))
+        )
+        db.add(exercise_log)
+        db.flush()
+
+        for set_log in log.sets:
+            db.add(SessionExerciseSetLog(
+                session_exercise_log_id=exercise_log.id,
+                set_number=set_log.set_number,
+                weight_used=set_log.weight_used,
+                reps_used=set_log.reps_used,
+            ))
 
     db.commit()
     db.refresh(session)
@@ -55,8 +65,8 @@ def get_monthly_stats(db: Session = Depends(get_db), current_user: User = Depend
     return {"total_workouts": total_workouts, "total_calories": round(total_calories)}
 
 
-@router.get("/last-weights/{workout_id}", response_model=Dict[int, float])
-def get_last_weights(workout_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+@router.get("/last-log/{workout_id}", response_model=Dict[int, LastExerciseLogResponse])
+def get_last_log(workout_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     workout = db.query(Workout).filter(Workout.id == workout_id, Workout.user_id == current_user.id).first()
     if not workout:
         raise HTTPException(status_code=404, detail="Treino não encontrado")
@@ -74,7 +84,8 @@ def get_last_weights(workout_id: int, db: Session = Depends(get_db), current_use
             .first()
         )
         if last_log:
-            result[item.exercise_id] = last_log.weight_used
+            last_log.sets.sort(key=lambda s: s.set_number)
+            result[item.exercise_id] = last_log
 
     return result
 
@@ -92,14 +103,16 @@ def get_exercise_history(exercise_id: int, db: Session = Depends(get_db), curren
         .all()
     )
 
-    return [
-        {
-            "date": log.session.performed_at.strftime("%d/%m"),
-            "weight_used": log.weight_used,
-            "reps_used": log.reps_used,
-        }
-        for log in logs
-    ]
+    result = []
+    for log in logs:
+        date = log.session.performed_at.strftime("%d/%m")
+        if log.sets:
+            for set_log in sorted(log.sets, key=lambda s: s.set_number):
+                result.append({"date": date, "weight_used": set_log.weight_used, "reps_used": set_log.reps_used})
+        else:
+            result.append({"date": date, "weight_used": log.weight_used, "reps_used": log.reps_used})
+
+    return result
 
 
 @router.get("/by-date", response_model=Dict[str, List[dict]])

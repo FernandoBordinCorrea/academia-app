@@ -85,11 +85,29 @@ export default StyleSheet.create({
   cardInfo: {
     flex: 1,
   },
+  cardDone: {
+    opacity: 0.5,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  cardHeaderNameRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   cardName: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 10,
+  },
+  textDone: {
+    textDecorationLine: 'line-through',
+    color: '#888',
   },
   statsRow: {
     flexDirection: 'row',
@@ -135,6 +153,34 @@ export default StyleSheet.create({
     color: '#555',
     fontSize: 10,
     marginTop: 6,
+  },
+  weightInputReadonly: {
+    color: '#888',
+    borderBottomColor: '#444',
+  },
+  setsList: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#2a2a2a',
+    gap: 8,
+  },
+  setRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  setRowDone: {
+    opacity: 0.5,
+  },
+  setLabelGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  setNumberLabel: {
+    color: '#aaa',
+    fontSize: 12,
   },
   footer: {
     paddingHorizontal: 20,

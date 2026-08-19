@@ -70,26 +70,19 @@ class Token(BaseModel):
 
 class ExerciseCreate(BaseModel):
     name: str
-    sets: int
-    reps: int
-    weight: float
 
 
 class ExerciseUpdate(BaseModel):
     name: Optional[str] = None
-    sets: Optional[int] = None
-    reps: Optional[int] = None
-    weight: Optional[float] = None
 
 
 class ExerciseResponse(BaseModel):
     id: int
     name: str
-    sets: int
-    reps: int
-    weight: float
     user_id: int
     created_at: datetime
+    last_weight: Optional[float] = None
+    last_reps: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -100,6 +93,9 @@ class ExerciseResponse(BaseModel):
 class WorkoutExerciseItem(BaseModel):
     exercise_id: int
     order: int
+    sets: int
+    reps: int
+    weight: float
 
 
 class WorkoutCreate(BaseModel):
@@ -115,6 +111,9 @@ class WorkoutUpdate(BaseModel):
 class WorkoutExerciseResponse(BaseModel):
     exercise_id: int
     order: int
+    sets: int
+    reps: int
+    weight: float
     exercise: ExerciseResponse
 
     class Config:
@@ -134,10 +133,17 @@ class WorkoutResponse(BaseModel):
 
 # --- Workout Session ---
 
+class SessionExerciseSetLogCreate(BaseModel):
+    set_number: int
+    weight_used: float
+    reps_used: int
+
+
 class SessionExerciseLogCreate(BaseModel):
     exercise_id: int
     weight_used: float
     reps_used: Optional[int] = None
+    sets: List[SessionExerciseSetLogCreate] = []
 
 
 class WorkoutSessionCreate(BaseModel):
@@ -147,10 +153,29 @@ class WorkoutSessionCreate(BaseModel):
     logs: List[SessionExerciseLogCreate]
 
 
+class SessionExerciseSetLogResponse(BaseModel):
+    set_number: int
+    weight_used: float
+    reps_used: int
+
+    class Config:
+        from_attributes = True
+
+
 class SessionExerciseLogResponse(BaseModel):
     exercise_id: int
     weight_used: float
     reps_used: Optional[int]
+    sets: List[SessionExerciseSetLogResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
+class LastExerciseLogResponse(BaseModel):
+    weight_used: float
+    reps_used: Optional[int]
+    sets: List[SessionExerciseSetLogResponse] = []
 
     class Config:
         from_attributes = True

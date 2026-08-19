@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   ActivityIndicator,
@@ -15,30 +15,22 @@ export default function ExerciseFormScreen({ route, navigation }) {
 
   const [form, setForm] = useState({
     name: existing?.name || '',
-    sets: existing?.sets?.toString() || '',
-    reps: existing?.reps?.toString() || '',
-    weight: existing?.weight?.toString() || '',
   });
   const [loading, setLoading] = useState(false);
+  const [existingExercises, setExistingExercises] = useState([]);
+
+  useEffect(() => {
+    api.get('/exercises/').then(res => setExistingExercises(res.data)).catch(() => {});
+  }, []);
 
   function setField(field, value) {
     setForm(prev => ({ ...prev, [field]: value }));
   }
 
-  async function handleSubmit() {
-    const { name, sets, reps, weight } = form;
-    if (!name || !sets || !reps || !weight) {
-      show('Erro', 'Preencha todos os campos');
-      return;
-    }
+  async function saveExercise() {
     try {
       setLoading(true);
-      const payload = {
-        name,
-        sets: parseInt(sets),
-        reps: parseInt(reps),
-        weight: parseFloat(weight),
-      };
+      const payload = { name: form.name.trim() };
       if (isEditing) {
         await api.patch(`/exercises/${existing.id}`, payload);
       } else {
@@ -50,6 +42,31 @@ export default function ExerciseFormScreen({ route, navigation }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleSubmit() {
+    const name = form.name.trim();
+    if (!name) {
+      show('Erro', 'Preencha o nome do exercício');
+      return;
+    }
+
+    const duplicate = existingExercises.find(
+      e => e.id !== existing?.id && e.name.trim().toLowerCase() === name.toLowerCase()
+    );
+    if (duplicate) {
+      show(
+        'Exercício já existe',
+        `Já existe um exercício chamado "${duplicate.name}". Deseja ${isEditing ? 'salvar' : 'criar'} mesmo assim?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: isEditing ? 'Salvar mesmo assim' : 'Criar mesmo assim', onPress: saveExercise },
+        ]
+      );
+      return;
+    }
+
+    saveExercise();
   }
 
   return (
@@ -64,41 +81,6 @@ export default function ExerciseFormScreen({ route, navigation }) {
           placeholderTextColor="#666"
           value={form.name}
           onChangeText={(v) => setField('name', v)}
-        />
-
-        <View style={styles.row}>
-          <View style={styles.halfField}>
-            <Text style={styles.label}>Séries</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="3"
-              placeholderTextColor="#666"
-              keyboardType="numeric"
-              value={form.sets}
-              onChangeText={(v) => setField('sets', v)}
-            />
-          </View>
-          <View style={styles.halfField}>
-            <Text style={styles.label}>Repetições</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="12"
-              placeholderTextColor="#666"
-              keyboardType="numeric"
-              value={form.reps}
-              onChangeText={(v) => setField('reps', v)}
-            />
-          </View>
-        </View>
-
-        <Text style={styles.label}>Peso (kg)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="8.0"
-          placeholderTextColor="#666"
-          keyboardType="decimal-pad"
-          value={form.weight}
-          onChangeText={(v) => setField('weight', v)}
         />
 
         <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>

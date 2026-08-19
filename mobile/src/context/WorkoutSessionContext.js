@@ -71,10 +71,10 @@ export function WorkoutSessionProvider({ children }) {
     return () => subscription.remove();
   }, [updateElapsed]);
 
-  const startSession = useCallback((workout, { weights, reps, fromLastSession }) => {
+  const startSession = useCallback((workout, { weights, reps, fromLastSession, setLogs, completedExercises, completedSets }) => {
     startTimeRef.current = Date.now();
     setElapsed(0);
-    setSession({ workout, weights, reps, fromLastSession });
+    setSession({ workout, weights, reps, fromLastSession, setLogs, completedExercises, completedSets });
     startWorkoutNotification(startTimeRef.current);
     clearInterval(intervalRef.current);
     intervalRef.current = setInterval(updateElapsed, 1000);
@@ -97,13 +97,41 @@ export function WorkoutSessionProvider({ children }) {
     setSession(prev => prev && { ...prev, reps: { ...prev.reps, [exerciseId]: value } });
   }, []);
 
+  const setSetField = useCallback((exerciseId, index, field, value) => {
+    setSession(prev => {
+      if (!prev) return prev;
+      const sets = [...(prev.setLogs[exerciseId] || [])];
+      sets[index] = { ...sets[index], [field]: value };
+      return { ...prev, setLogs: { ...prev.setLogs, [exerciseId]: sets } };
+    });
+  }, []);
+
+  const toggleExerciseCompleted = useCallback((exerciseId) => {
+    setSession(prev => prev && {
+      ...prev,
+      completedExercises: { ...prev.completedExercises, [exerciseId]: !prev.completedExercises[exerciseId] },
+    });
+  }, []);
+
+  const toggleSetCompleted = useCallback((exerciseId, index) => {
+    setSession(prev => {
+      if (!prev) return prev;
+      const sets = [...(prev.completedSets[exerciseId] || [])];
+      sets[index] = !sets[index];
+      return { ...prev, completedSets: { ...prev.completedSets, [exerciseId]: sets } };
+    });
+  }, []);
+
   const getFinalElapsed = useCallback(() => {
     return startTimeRef.current ? Math.floor((Date.now() - startTimeRef.current) / 1000) : elapsed;
   }, [elapsed]);
 
   return (
     <WorkoutSessionContext.Provider
-      value={{ session, elapsed, startSession, endSession, setWeight, setRep, getFinalElapsed }}
+      value={{
+        session, elapsed, startSession, endSession, setWeight, setRep, setSetField,
+        toggleExerciseCompleted, toggleSetCompleted, getFinalElapsed,
+      }}
     >
       {children}
     </WorkoutSessionContext.Provider>

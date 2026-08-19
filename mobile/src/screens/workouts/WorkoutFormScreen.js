@@ -16,7 +16,14 @@ export default function WorkoutFormScreen({ route, navigation }) {
 
   const [name, setName] = useState(existing?.name || '');
   const [selected, setSelected] = useState(
-    existing?.items?.map(i => ({ ...i.exercise, order: i.order })) || []
+    existing?.items?.map(i => ({
+      id: i.exercise.id,
+      name: i.exercise.name,
+      order: i.order,
+      sets: String(i.sets),
+      reps: String(i.reps),
+      weight: String(i.weight),
+    })) || []
   );
   const [available, setAvailable] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -39,7 +46,14 @@ export default function WorkoutFormScreen({ route, navigation }) {
 
   function addExercise(exercise) {
     if (selected.find(e => e.id === exercise.id)) return;
-    setSelected(prev => [...prev, { ...exercise, order: prev.length + 1 }]);
+    setSelected(prev => [...prev, {
+      id: exercise.id,
+      name: exercise.name,
+      order: prev.length + 1,
+      sets: '3',
+      reps: exercise.last_reps != null ? String(exercise.last_reps) : '12',
+      weight: exercise.last_weight != null ? String(exercise.last_weight) : '',
+    }]);
   }
 
   function removeExercise(id) {
@@ -53,6 +67,10 @@ export default function WorkoutFormScreen({ route, navigation }) {
     setSelected(data.map((e, i) => ({ ...e, order: i + 1 })));
   }
 
+  function setItemField(id, field, value) {
+    setSelected(prev => prev.map(e => e.id === id ? { ...e, [field]: value } : e));
+  }
+
   async function handleSubmit() {
     if (!name.trim()) {
       show('Erro', 'Digite um nome para o treino');
@@ -63,9 +81,21 @@ export default function WorkoutFormScreen({ route, navigation }) {
       return;
     }
 
+    const invalid = selected.find(e => !e.sets || !e.reps || !e.weight);
+    if (invalid) {
+      show('Erro', `Preencha séries, reps e peso de "${invalid.name}"`);
+      return;
+    }
+
     const payload = {
       name: name.trim(),
-      exercises: selected.map(e => ({ exercise_id: e.id, order: e.order })),
+      exercises: selected.map(e => ({
+        exercise_id: e.id,
+        order: e.order,
+        sets: parseInt(e.sets),
+        reps: parseInt(e.reps),
+        weight: parseFloat(e.weight),
+      })),
     };
 
     try {
@@ -93,14 +123,50 @@ export default function WorkoutFormScreen({ route, navigation }) {
           disabled={isActive}
           style={[styles.selectedItem, isActive && styles.selectedItemActive]}
         >
-          <Text style={styles.selectedOrder}>{getIndex() + 1}</Text>
-          <Text style={styles.selectedName}>{item.name}</Text>
-          <View style={styles.selectedActions}>
-            <TouchableOpacity onPress={() => removeExercise(item.id)} style={styles.orderBtn}>
-              <Ionicons name="close" size={18} color="#ff5555" />
-            </TouchableOpacity>
-            <View style={styles.orderBtn}>
-              <Ionicons name="reorder-three" size={22} color="#aaa" />
+          <View style={styles.selectedTopRow}>
+            <Text style={styles.selectedOrder}>{getIndex() + 1}</Text>
+            <Text style={styles.selectedName}>{item.name}</Text>
+            <View style={styles.selectedActions}>
+              <TouchableOpacity onPress={() => removeExercise(item.id)} style={styles.orderBtn}>
+                <Ionicons name="close" size={18} color="#ff5555" />
+              </TouchableOpacity>
+              <View style={styles.orderBtn}>
+                <Ionicons name="reorder-three" size={22} color="#aaa" />
+              </View>
+            </View>
+          </View>
+          <View style={styles.selectedGoalsRow}>
+            <View style={styles.goalField}>
+              <TextInput
+                style={styles.goalInput}
+                value={item.sets}
+                onChangeText={(v) => setItemField(item.id, 'sets', v)}
+                keyboardType="number-pad"
+                selectTextOnFocus
+              />
+              <Text style={styles.goalLabel}>séries</Text>
+            </View>
+            <View style={styles.goalDivider} />
+            <View style={styles.goalField}>
+              <TextInput
+                style={styles.goalInput}
+                value={item.reps}
+                onChangeText={(v) => setItemField(item.id, 'reps', v)}
+                keyboardType="number-pad"
+                selectTextOnFocus
+              />
+              <Text style={styles.goalLabel}>reps</Text>
+            </View>
+            <View style={styles.goalDivider} />
+            <View style={styles.goalField}>
+              <TextInput
+                style={styles.goalInput}
+                value={item.weight}
+                onChangeText={(v) => setItemField(item.id, 'weight', v)}
+                keyboardType="decimal-pad"
+                selectTextOnFocus
+              />
+              <Text style={styles.goalLabel}>kg</Text>
             </View>
           </View>
         </Pressable>
@@ -162,7 +228,9 @@ export default function WorkoutFormScreen({ route, navigation }) {
               notSelected.map(exercise => (
                 <TouchableOpacity key={exercise.id} style={styles.availableItem} onPress={() => addExercise(exercise)}>
                   <Text style={styles.availableName}>{exercise.name}</Text>
-                  <Text style={styles.availableDetail}>{exercise.sets}x{exercise.reps} · {exercise.weight}kg</Text>
+                  {exercise.last_weight != null && (
+                    <Text style={styles.availableDetail}>último: {exercise.last_weight}kg · {exercise.last_reps} reps</Text>
+                  )}
                   <Ionicons name="add-circle-outline" size={22} color="#E8FF47" />
                 </TouchableOpacity>
               ))

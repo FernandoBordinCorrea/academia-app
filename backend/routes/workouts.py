@@ -22,7 +22,14 @@ def create(data: WorkoutCreate, db: Session = Depends(get_db), current_user: Use
         exercise = db.query(Exercise).filter(Exercise.id == item.exercise_id, Exercise.user_id == current_user.id).first()
         if not exercise:
             raise HTTPException(status_code=404, detail=f"Exercício {item.exercise_id} não encontrado")
-        db.add(WorkoutExercise(workout_id=workout.id, exercise_id=item.exercise_id, order=item.order))
+        db.add(WorkoutExercise(
+            workout_id=workout.id,
+            exercise_id=item.exercise_id,
+            order=item.order,
+            sets=item.sets,
+            reps=item.reps,
+            weight=item.weight,
+        ))
 
     db.commit()
     db.refresh(workout)
@@ -61,7 +68,14 @@ def update(workout_id: int, data: WorkoutUpdate, db: Session = Depends(get_db), 
             exercise = db.query(Exercise).filter(Exercise.id == item.exercise_id, Exercise.user_id == current_user.id).first()
             if not exercise:
                 raise HTTPException(status_code=404, detail=f"Exercício {item.exercise_id} não encontrado")
-            db.add(WorkoutExercise(workout_id=workout.id, exercise_id=item.exercise_id, order=item.order))
+            db.add(WorkoutExercise(
+                workout_id=workout.id,
+                exercise_id=item.exercise_id,
+                order=item.order,
+                sets=item.sets,
+                reps=item.reps,
+                weight=item.weight,
+            ))
 
     db.commit()
     db.refresh(workout)
