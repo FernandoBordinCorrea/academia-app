@@ -356,12 +356,23 @@ filmado de lado).
 
 \subsection{Classificação Supervisionada por Exercício}
 
-Para cada repetição identificada (sequência de quadros entre dois instantes
-de repouso), o sistema seleciona o quadro de maior intensidade de
-movimento -- o pico da repetição -- e aplica a esse quadro um classificador
-binário (correto/incorreto), implementado com
+Na inferência, para cada repetição identificada (sequência de quadros
+entre dois instantes de repouso, Seção~4.1), o sistema seleciona um único
+quadro para classificar: o de maior valor, entre os quadros da repetição,
+de uma métrica de intensidade específica do exercício -- para a elevação
+frontal, o maior ângulo quadril--ombro--cotovelo entre os dois braços; para
+a rosca bíceps, a maior flexão do cotovelo (180° menos o ângulo do
+cotovelo). Formalmente, sendo $i_t$ essa métrica no quadro $t$ da
+repetição, o quadro classificado é $\arg\max_t i_t$ -- o quadro de pico. O
+classificador binário (correto/incorreto), implementado com
 scikit-learn~\cite{pedregosa2011scikit} e treinado especificamente para
-aquele exercício. Para a elevação frontal, foi usado um classificador
+aquele exercício, é aplicado somente às características extraídas desse
+quadro. O treinamento, descrito a seguir, não usa essa noção de pico: como
+detalhado na Seção~6, cada quadro válido do dataset vira uma amostra de
+treino independente, sem segmentação em repetições nem seleção de um
+quadro representativo por repetição -- assimetria entre a amostragem de
+treino e a amostragem de inferência discutida na Seção~7.1. Para a
+elevação frontal, foi usado um classificador
 Random Forest~\cite{breiman2001random} fixo, escolhido por seu bom
 desempenho com conjuntos de características pequenos e de baixa
 dimensionalidade (3 a 7 variáveis neste caso), por não exigir grande
