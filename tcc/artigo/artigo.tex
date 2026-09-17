@@ -505,42 +505,107 @@ Random Forest, Gradient Boosting e SVM, com F1 macro de 0,85).
 
 \subsection{Limitações Identificadas}
 
+As acurácias reportadas acima (79\% e 85\%) devem ser lidas com uma
+ressalva sobre o protocolo de avaliação, descrito na Seção~6: como o
+particionamento treino/teste e os \textit{folds} da validação cruzada são
+feitos por quadro, sobre 626 quadros de 28 vídeos (elevação frontal) e
+1158 quadros de 16 vídeos (rosca bíceps), e como o identificador do vídeo
+de origem não é preservado no dataset, quadros de um mesmo vídeo -- e
+portanto quase-duplicatas de uma mesma repetição -- provavelmente aparecem
+tanto no treino quanto no teste. Essas métricas devem, portanto, ser lidas
+como um limite superior otimista do desempenho do classificador, e não
+como uma medida de generalização para um usuário ou vídeo nunca visto pelo
+modelo. Reavaliar os dois classificadores com particionamento por vídeo
+(por exemplo, \texttt{GroupKFold}, agrupando quadros pelo vídeo de origem)
+é um item de trabalho futuro (Seção~8).
+
 A principal limitação identificada durante os testes com execuções reais
-do usuário é que o modelo permanece preso ao estilo em que o dataset de
-treino foi filmado: quando o usuário executa fora desse padrão -- por
-exemplo, com ângulo do braço maior na elevação frontal, ou com os
-cotovelos mais à frente do corpo na rosca bíceps, o modelo classifica
-errado, já que foi treinado de forma que esse tipo de movimento nunca
-fosse visto (e, portanto, nunca aprendido como uma execução correta
-possível). No caso da elevação frontal, isso é mensurável: o dataset
-nunca passa de aproximadamente 110° de ângulo do braço e 35° de
-assimetria entre os dois braços, enquanto execuções reais dos usuários --
-inclusive tecnicamente corretas -- chegam a 172° e 97°, faixa em que o
-classificador tende a extrapolar mal e produzir classificações instáveis.
+do usuário -- e, como se argumenta a seguir, também a mais diretamente
+explicável a partir do próprio desenho do pipeline de treino e inferência
+-- é que o modelo permanece preso ao estilo em que o dataset de treino foi
+filmado. Essa limitação tem um mecanismo causal específico: como descrito
+na Seção~4.2, a inferência classifica sempre o quadro de pico da
+repetição (o de maior ângulo de braço, no caso da elevação frontal),
+enquanto o treino, ao contrário da inferência, não seleciona um quadro de
+pico por repetição -- todo quadro não-repouso do vídeo vira uma amostra
+independente, sem qualquer preferência por quadros de maior amplitude
+(Seção~6). O quadro que o classificador de fato vê em produção -- o pico,
+por construção o de maior ângulo da repetição -- é justamente aquele para
+o qual o treino tem menos e menos representativa cobertura: o dataset
+nunca passa de aproximadamente 110° de ângulo do braço e 35° de assimetria
+entre os dois braços, enquanto execuções reais dos usuários -- inclusive
+tecnicamente corretas -- chegam a 172° e 97°, bem além do que o modelo já
+viu como exemplo, faixa em que o classificador tende a extrapolar mal e
+produzir classificações instáveis. Ou seja, o descasamento entre a
+amostragem de treino (todo quadro válido, sem segmentação em repetições) e
+a amostragem de inferência (um único quadro, sempre o de maior amplitude
+da repetição) não é só uma inconsistência de engenharia: é o mecanismo que
+faz o classificador operar, em uso real, sistematicamente fora do suporte
+dos dados em que foi treinado.
 
-Além da amplitude do movimento, o mesmo problema aparece na forma como o
-vídeo é filmado. Em testes repetidos, para os dois exercícios, sempre que
-uma segunda pessoa grava a execução do usuário (segurando o celular,
-tipicamente numa altura e ângulo mais próximos dos olhos, acompanhando o
-movimento) o modelo classifica errado; quando o próprio usuário se grava,
-com a câmera fixa em algum apoio e normalmente numa altura mais baixa, a
-classificação funciona corretamente. Isso é consistente com a mesma causa
-raiz: o dataset reaproveitado de terceiros~\cite{chen2020posetrainerrepo}
-foi filmado num estilo específico de posicionamento de câmera, e o ângulo
-de projeção 2D de uma mesma execução muda conforme a câmera muda de
-posição -- ou seja, o modelo acabou aprendendo implicitamente não só "o
-que é uma repetição correta", mas também "com que ângulo de câmera as
-repetições de treino foram filmadas".
+Além da amplitude do movimento, uma observação preliminar aponta na mesma
+direção quanto à forma como o vídeo é filmado: em testes repetidos, para
+os dois exercícios, sempre que uma segunda pessoa grava a execução do
+autor deste trabalho (segurando o celular, tipicamente numa altura e
+ângulo mais próximos dos olhos, acompanhando o movimento) o modelo
+classifica errado; quando o autor se grava, com a câmera fixa em algum
+apoio e normalmente numa altura mais baixa, a classificação funciona
+corretamente. Essa observação não constitui um experimento controlado --
+não há registro sistemático de taxa de erro por posição de câmera, e o
+único sujeito testado foi o próprio autor --, mas é consistente com a
+mesma causa raiz: o dataset reaproveitado de
+terceiros~\cite{chen2020posetrainerrepo} foi filmado num estilo específico
+de posicionamento de câmera, e o ângulo de projeção 2D de uma mesma
+execução muda conforme a câmera muda de posição. Um experimento
+controlado -- mesma execução repetida em três posições de câmera, com taxa
+de erro de classificação medida por posição -- é proposto como trabalho
+futuro (Seção~8) para isolar esse fator da amplitude de movimento.
 
-Um fator adicional, ainda não isolado experimentalmente, é que o pipeline
-de extração de pose usado na produção (MediaPipe) difere do pipeline usado
-para gerar o dataset (OpenPose), estimadores que não produzem exatamente
-os mesmos valores para as mesmas articulações. Por ter sido coletado para
-outro projeto, esse dataset também não foi desenhado especificamente em
-torno da variabilidade de execução dos usuários deste aplicativo -- nem de
+Dois outros descasamentos entre o pipeline de treino e o de inferência
+foram identificados por inspeção direta do código, e ainda não têm seu
+impacto isolado experimentalmente. O primeiro é o já mencionado
+(Seção~2.2): o pipeline de extração de pose usado na produção (MediaPipe)
+difere do pipeline usado para gerar o dataset (OpenPose), estimadores que
+não produzem exatamente os mesmos valores para as mesmas articulações. O
+segundo é um descasamento no critério de repouso da rosca bíceps: o script
+que curou o dataset descarta como repouso quadros com ângulo de cotovelo
+acima de 155°, enquanto a inferência em produção considera repouso a
+partir de 130° -- ou seja, quadros com o cotovelo entre 130° e 155° foram
+incluídos no treino como exemplos válidos de execução, mas em produção
+esses mesmos quadros já seriam tratados como repouso e nunca chegariam a
+ser o quadro de pico de uma repetição (para a elevação frontal os dois
+limiares coincidem, em 20°). A unificação desses limiares é proposta como
+trabalho futuro (Seção~8). Por ter sido coletado para outro projeto, o
+dataset reaproveitado também não foi desenhado especificamente em torno da
+variabilidade de execução dos usuários deste aplicativo -- nem de
 amplitude de movimento, nem de posicionamento de câmera.
 
-A superação dessa limitação depende de ampliar o conjunto de treino com
+A avaliação dos dois classificadores também se limitou a métricas
+agregadas: acurácia no conjunto de teste e em validação cruzada para os
+dois exercícios, e F1 macro em validação cruzada para a rosca bíceps
+(Seção~6) -- sem matriz de confusão nem métricas por classe (precisão e
+revocação individuais para "correto" e "incorreto"). Essa lacuna importa
+em particular num detector de execução, em que os dois tipos de erro têm
+custo assimétrico: classificar como correta uma repetição na verdade
+incorreta pode reforçar no usuário um padrão de movimento lesivo, um custo
+maior do que o de classificar como incorreta uma repetição na verdade
+correta. O dataset da rosca bíceps também é desbalanceado (465 quadros
+"correto" contra 693 "incorreto", Tabela~\ref{tab:dataset}), o que pode
+enviesar o classificador na direção da classe majoritária sem que isso
+apareça na acurácia agregada. Calcular precisão e revocação por classe
+para os dois modelos é proposto como trabalho futuro (Seção~8).
+
+Por fim, a detecção do estado de repouso (Seção~4.1), da qual depende toda
+a segmentação de um vídeo em repetições e, por consequência, toda a
+classificação, não foi avaliada isoladamente -- não há medição de quantas
+repetições reais são corretamente detectadas, perdidas (fundidas com a
+repetição seguinte) ou criadas espuriamente (uma única repetição dividida
+em duas). Um protocolo para essa avaliação -- vídeos com número de
+repetições conhecido a priori, comparando contra o número de repetições
+detectadas, perdidas e falsas -- é proposto como trabalho futuro
+(Seção~8).
+
+A superação da limitação de amplitude e posicionamento de câmera depende de ampliar o conjunto de treino com
 vídeos próprios que cubram tanto a faixa de amplitude alta (exemplos
 corretos, incluindo a leve dessincronia natural entre os dois braços que
 ocorre em execuções reais, e exemplos incorretos na mesma faixa) quanto
