@@ -251,6 +251,24 @@ bíceps deste trabalho (Seção~4.2), disponibilizado publicamente pelos
 autores~\cite{chen2020posetrainerrepo} -- mas apenas esse subconjunto de
 dois exercícios foi reaproveitado, não os quatro originais.
 
+Uma abordagem mais recente para o mesmo tipo de problema é a de Parmar,
+Gharat e Rhodin~\cite{parmar2022workout}, que avaliam a forma de execução
+em três exercícios de musculação com barra (agachamento, desenvolvimento
+militar e remada curvada) a partir de representações aprendidas de forma
+\textit{self-supervised} diretamente sobre o vídeo, sem depender de
+regras geométricas manuais nem de comparação explícita contra uma
+trajetória de referência -- uma terceira estratégia de decisão, distinta
+tanto do Pose Trainer quanto do classificador sobre características
+geométricas adotado neste trabalho.
+
+Num registro mais próximo do Pose Trainer quanto ao objetivo de
+diagnóstico, Dittakavi et al.~\cite{dittakavi2022posetutor} propõem o Pose
+Tutor, um sistema explicável que prediz a classe de uma pose e usa um
+mecanismo de verossimilhança por ângulo para apontar qual articulação mais
+contribuiu para o erro, sugerindo a correção correspondente -- avaliado em
+posturas de ioga, pilates e kungfu, não em exercícios de musculação com
+peso livre.
+
 \subsection{Posicionamento deste Trabalho}
 
 A Tabela~\ref{tab:comparacao} resume os eixos de comparação relevantes
@@ -300,6 +318,15 @@ Módulo de um app completo de treino, hospedado em nuvem \\
 \hline
 \end{tabular}
 \end{table}
+
+O eixo de estratégia de decisão listado na Tabela~\ref{tab:comparacao} não
+esgota o espaço de abordagens da literatura: Parmar, Gharat e
+Rhodin~\cite{parmar2022workout} avaliam erro de forma em agachamento,
+desenvolvimento militar e remada curvada com representações aprendidas de
+forma \textit{self-supervised} diretamente do vídeo (Seção~2.3), uma
+quarta estratégia -- nem classificação supervisionada sobre características
+manuais, nem comparação a trajetória de referência -- que não foi incluída
+como coluna adicional na tabela para não comprometer sua legibilidade.
 
 A diferença mais consequente entre este trabalho e os dois revisados está
 na origem do dataset de treino: tanto Velloso et
