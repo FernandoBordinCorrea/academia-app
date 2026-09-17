@@ -135,17 +135,18 @@ frente (Classe B), levantar o halter só até a metade do percurso (Classe C),
 descer o halter só até a metade (Classe D) e jogar o quadril para a frente
 (Classe E). Um classificador Random Forest, treinado sobre características
 estatísticas extraídas em janelas deslizantes dos sinais dos quatro
-sensores, atingiu 98,03\% de acurácia em validação cruzada 10-fold -- taxa
-sensivelmente mais alta que a obtida pelos classificadores geométricos por
-quadro deste trabalho (Seção~7), o que é esperado, já que sensores
-inerciais captam diretamente grandezas físicas (aceleração, rotação) que uma
-câmera só pode estimar indiretamente a partir da projeção 2D do corpo. Essa
-mesma vantagem é, porém, sua principal limitação prática: cada sessão de
-treino exige instrumentar o usuário com múltiplos sensores vestíveis fixados
-em pontos específicos do corpo e do equipamento, o que inviabiliza o uso
-espontâneo em uma academia comum -- restrição que abordagens baseadas em
-visão computacional, discutidas a seguir, eliminam ao dispensar qualquer
-instrumentação além de uma câmera comum.
+sensores, atingiu 98,03\% de acurácia em validação cruzada 10-fold. Essa
+taxa é sensivelmente mais alta que a obtida pelos classificadores
+geométricos por quadro deste trabalho (Seção~7). A diferença é esperada:
+sensores inerciais captam diretamente grandezas físicas (aceleração,
+rotação), enquanto uma câmera só pode estimá-las indiretamente, a partir
+da projeção 2D do corpo. Essa mesma vantagem é, porém, sua principal
+limitação prática: cada sessão de treino exige instrumentar o usuário com
+múltiplos sensores vestíveis, fixados em pontos específicos do corpo e do
+equipamento. Isso inviabiliza o uso espontâneo em uma academia comum --
+restrição que abordagens baseadas em visão computacional, discutidas a
+seguir, eliminam ao dispensar qualquer instrumentação além de uma câmera
+comum.
 
 \subsection{Estimativa de Pose Humana a partir de Vídeo}
 
