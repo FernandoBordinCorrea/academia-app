@@ -739,9 +739,26 @@ ferramenta de extração de dataset diretamente a partir do MediaPipe,
 substituindo o pipeline OpenPose herdado do dataset original e unificando
 o estimador de pose usado em treino e em produção; (iii) a adição de novos
 exercícios ao detector, reaproveitando o pipeline de extração de
-características e classificação já estabelecido; e (iv) a validação de
+características e classificação já estabelecido; (iv) a validação de
 usabilidade do detector com um grupo maior de usuários reais, fora do
-próprio autor do trabalho.
+próprio autor do trabalho; (v) a reavaliação dos classificadores com
+particionamento treino/teste e validação cruzada por vídeo
+(\texttt{GroupKFold}), em vez de por quadro (Seção~6); (vi) o alinhamento
+entre a amostragem usada no treino e o quadro efetivamente classificado na
+inferência, por exemplo restringindo o treino a quadros de pico por
+repetição (Seção~4.2, Seção~7.1); (vii) a unificação dos limiares de
+detecção de repouso usados na curadoria do dataset e na inferência em
+produção, hoje divergentes para a rosca bíceps (Seção~7.1); (viii) a
+avaliação isolada da segmentação de repetições (detecção do estado de
+repouso), com um protocolo de vídeos com número de repetições conhecido a
+priori comparado contra repetições detectadas, perdidas e falsas; (ix) o
+cálculo de métricas por classe (precisão e revocação) e de matriz de
+confusão para os dois classificadores; (x) um experimento controlado de
+posicionamento de câmera, com a mesma execução repetida em três posições e
+taxa de erro de classificação medida por posição; e (xi) a adoção de uma
+base de cálculo calórico fundamentada -- como o \textit{Compendium of
+Physical Activities} (valores MET por atividade) -- em lugar da heurística
+linear tempo $\times$ peso atualmente usada (Seção~3.1).
 
 \bibliographystyle{sbc}
 \bibliography{referencias}
