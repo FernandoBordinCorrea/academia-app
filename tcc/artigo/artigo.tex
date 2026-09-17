@@ -489,10 +489,10 @@ Rosca Bíceps      &   6 / 10 & 1158 & 465 / 693 \\
 \end{tabular}
 \end{table}
 
-Cada vídeo de treino gera várias linhas de dados (uma por quadro válido
-dentro de uma repetição, após filtro de confiança de detecção do
-OpenPose), o que explica o número de amostras ser bem maior do que o
-número de vídeos do dataset original.
+Cada vídeo de treino gera várias linhas de dados (uma por quadro válido do
+vídeo, após descarte dos quadros em repouso e dos de baixa confiança de
+detecção do OpenPose), o que explica o número de amostras ser bem maior do
+que o número de vídeos do dataset original.
 
 \subsection{Pipeline de Análise: Vídeo Gravado vs. Tempo Real}
 
