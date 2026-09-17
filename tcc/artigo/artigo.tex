@@ -425,9 +425,12 @@ uma taxa de amostragem fixa, para reduzir custo computacional sem perda
 perceptível de qualidade de detecção) e retorna a lista de repetições
 classificadas de uma só vez. Esse modo foi adotado após uma primeira
 versão baseada em \textit{streaming} de quadros por WebSocket em tempo
-real ter se mostrado pouco confiável em rede móvel real (taxa efetiva de
-1--2 quadros por segundo, insuficiente para capturar o pico de movimentos
-rápidos) -- o endpoint WebSocket (\texttt{/ws/detector}) foi mantido no
+real ter se mostrado pouco confiável em rede móvel real -- observação
+empírica feita durante os testes de desenvolvimento, sem metodologia
+formal de medição, mas com a taxa efetiva de quadros processados por
+segundo caindo, em uso na rede móvel, para uma ordem de grandeza
+claramente insuficiente para capturar o pico de movimentos rápidos -- o
+endpoint WebSocket (\texttt{/ws/detector}) foi mantido no
 backend por compatibilidade, mas o fluxo principal do aplicativo usa o
 modo de vídeo gravado.
 
