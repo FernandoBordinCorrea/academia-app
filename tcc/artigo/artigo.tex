@@ -114,9 +114,10 @@ computacional. Como objetivos específicos, destacam-se:
 O restante deste artigo está organizado da seguinte forma: a Seção~2
 apresenta a revisão tecnológica; a Seção~3 apresenta a arquitetura geral do
 sistema; a Seção~4 detalha o módulo de detecção de execução de exercícios;
-a Seção~5 descreve a implantação em nuvem; a Seção~6 apresenta resultados e
-limitações identificadas; e a Seção~7 conclui o trabalho e aponta
-direções futuras.
+a Seção~5 descreve a implantação em nuvem; a Seção~6 descreve a
+metodologia de avaliação dos classificadores; a Seção~7 apresenta
+resultados e limitações identificadas; e a Seção~8 conclui o trabalho e
+aponta direções futuras.
 
 \section{Revisão Tecnológica}
 
@@ -140,7 +141,7 @@ descer o halter só até a metade (Classe D) e jogar o quadril para a frente
 estatísticas extraídas em janelas deslizantes dos sinais dos quatro
 sensores, atingiu 98,03\% de acurácia em validação cruzada 10-fold -- taxa
 sensivelmente mais alta que a obtida pelos classificadores geométricos por
-quadro deste trabalho (Seção~6), o que é esperado, já que sensores
+quadro deste trabalho (Seção~7), o que é esperado, já que sensores
 inerciais captam diretamente grandezas físicas (aceleração, rotação) que uma
 câmera só pode estimar indiretamente a partir da projeção 2D do corpo. Essa
 mesma vantagem é, porém, sua principal limitação prática: cada sessão de
@@ -210,7 +211,7 @@ anatômico e, por consequência, no ângulo articular calculado a partir dele.
 Como o dataset de treino dos classificadores deste trabalho foi extraído com
 OpenPose (Seção~2.3) e a inferência em produção usa MediaPipe Pose
 (Seção~4.1), esse descompasso entre estimadores é um fator que sustenta
-parte da limitação discutida na Seção~6.1.
+parte da limitação discutida na Seção~7.1.
 
 \subsection{Sistemas de Correção de Exercícios Baseados em Visão Computacional}
 
@@ -448,6 +449,47 @@ usado em desenvolvimento local. O aplicativo móvel foi então compilado
 como um pacote Android autônomo (\textit{build} EAS, perfil
 \textit{preview}), já apontando para o backend hospedado na nuvem, sem
 depender de um servidor de desenvolvimento (\textit{Metro}) local.
+
+\section{Metodologia de Avaliação}
+
+Esta seção descreve o protocolo efetivamente usado para treinar e avaliar
+os classificadores de execução (Seção~4.2), antes de os resultados serem
+apresentados na Seção~7.
+
+Os dados de treino têm origem no dataset público do projeto Pose
+Trainer~\cite{chen2020posetrainerrepo} (Seção~2.3): sequências de pose,
+extraídas com OpenPose (formato BODY\_18) a partir de vídeos de execuções
+de elevação frontal e rosca bíceps, rotuladas por vídeo como "correta" ou
+"incorreta". Um script de geração de dataset processa cada vídeo quadro a
+quadro, descarta os quadros em posição de repouso e os de baixa confiança
+de detecção, calcula os ângulos articulares de cada quadro remanescente e
+grava cada um como uma linha independente de um arquivo CSV -- sem
+preservar qualquer identificador do vídeo ou do usuário de origem daquele
+quadro. A Tabela~\ref{tab:dataset} (Seção~4.2) resume o volume resultante:
+626 linhas a partir de 28 vídeos para elevação frontal, e 1158 linhas a
+partir de 16 vídeos para rosca bíceps.
+
+O particionamento treino/teste (80\%/20\%) e os \textit{folds} da
+validação cruzada 5-fold são feitos sobre essas linhas, ou seja, por
+quadro, e não por vídeo: como o identificador do vídeo de origem não é
+preservado no CSV, não é possível, nem no código nem a posteriori, garantir
+ou mesmo verificar que os quadros de um mesmo vídeo caiam inteiramente do
+mesmo lado da partição. Como quadros consecutivos de uma mesma repetição
+tendem a ser muito semelhantes entre si, é provável que quadros de um
+mesmo vídeo apareçam tanto no conjunto de treino quanto no de teste (ou em
+\textit{folds} diferentes da validação cruzada). As consequências dessa
+limitação do protocolo de avaliação para a leitura das métricas reportadas
+são discutidas na Seção~7.1.
+
+As métricas reportadas na Seção~7 são: acurácia no conjunto de teste (20\%
+dos dados, não usado no treino) e acurácia média $\pm$ desvio-padrão em
+validação cruzada 5-fold, para a elevação frontal; e acurácia no conjunto
+de teste e F1 macro em validação cruzada 5-fold, para a rosca bíceps --
+métrica usada também como critério de seleção entre os três algoritmos
+candidatos (Random Forest, Gradient Boosting e SVM) via busca de
+hiperparâmetros. Não foram calculadas matriz de confusão nem métricas por
+classe (precisão e revocação individuais) para nenhum dos dois modelos,
+lacuna também discutida na Seção~7.1.
 
 \section{Resultados e Discussão}
 
