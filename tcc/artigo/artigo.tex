@@ -237,28 +237,105 @@ dois exercícios foi reaproveitado, não os quatro originais.
 
 \subsection{Posicionamento deste Trabalho}
 
-Os três trabalhos revisados definem eixos de comparação relevantes para
-posicionar a abordagem adotada aqui. Quanto ao sensor: Velloso et
-al.~\cite{velloso2013hars} dependem de instrumentação física vestível,
-enquanto este trabalho, como o Pose Trainer~\cite{chen2020poseexercise},
-usa apenas a câmera comum de um \textit{smartphone}. Quanto à estratégia de
-decisão: Velloso et al. treinam um classificador sobre séries temporais de
-sinais inerciais, e o Pose Trainer compara a sequência de poses do usuário
-contra exemplares de referência via DTW combinado a regras geométricas
-manuais; este trabalho adota uma terceira estratégia -- um classificador
-supervisionado (Random Forest ou SVM, Seção~4.2) treinado para decidir
-diretamente correto/incorreto a partir de características geométricas
-extraídas do quadro de pico de cada repetição, sem comparação explícita
-contra uma trajetória de referência. Quanto à granularidade: a classificação
-é feita repetição a repetição dentro de um mesmo vídeo, delimitando
-automaticamente o início e o fim de cada repetição pela detecção do estado
-de repouso (Seção~4.1), e não apenas ao nível do vídeo completo. Por fim,
-quanto à integração: enquanto o Pose Trainer é uma ferramenta de análise
-isolada, o detector deste trabalho é um módulo integrado a um aplicativo
-completo de gerenciamento de treinos, com o pipeline de análise de vídeo
-executado em um backend hospedado em nuvem (Seção~5) -- decisão que, como
-discutido na Seção~2.2, também molda a escolha do estimador de pose usado em
-produção.
+A Tabela~\ref{tab:comparacao} resume os eixos de comparação relevantes
+entre os três trabalhos revisados e a abordagem adotada aqui.
+
+\begin{table}[ht]
+\centering
+\caption{Comparação entre este trabalho e os sistemas revisados (Seção~2)}
+\label{tab:comparacao}
+\footnotesize
+\begin{tabular}{p{1.9cm}p{3.5cm}p{3.5cm}p{3.7cm}}
+\hline
+\textbf{Eixo} & \textbf{Velloso et al.} & \textbf{Pose Trainer} & \textbf{Este trabalho} \\
+\hline
+Sensor &
+IMU vestível (luva, bracelete, cinto lombar, halter) &
+Câmera comum de \textit{smartphone} &
+Câmera comum de \textit{smartphone} \\[4pt]
+Estratégia de decisão &
+Classificador supervisionado sobre séries temporais de sinais inerciais &
+Regras geométricas manuais + DTW/kNN contra trajetórias de referência &
+Classificador supervisionado (RF/SVM) sobre o quadro de pico da repetição \\[4pt]
+Granularidade &
+Repetição, em protocolo de laboratório &
+Vídeo/execução completa &
+Repetição, segmentada automaticamente pela detecção de repouso \\[4pt]
+Feedback ao usuário &
+Classe de erro específica (A--E) &
+Qual erro geométrico ocorreu &
+Só correto/incorreto + confiança \\[4pt]
+Origem do dataset &
+Coletado pelos autores, desenhado para as 5 classes-alvo &
+Coletado pelos autores, desenhado para os 4 exercícios e erros-alvo &
+Reaproveitado de terceiros (Pose Trainer), não desenhado para este app \\[4pt]
+Restrição computacional em produção &
+Não se aplica (sinais processados localmente) &
+Ambiente de pesquisa, sem restrição de custo relatada &
+Nuvem sem GPU (Azure App Service B1) \\[4pt]
+Custo da estratégia &
+Janela deslizante sobre toda a série temporal &
+Trajetória completa da execução &
+Um único quadro de pico por repetição; trajetória não observada \\[4pt]
+Integração &
+Não relatada &
+Ferramenta de análise isolada &
+Módulo de um app completo de treino, hospedado em nuvem \\
+\hline
+\end{tabular}
+\end{table}
+
+A diferença mais consequente entre este trabalho e os dois revisados está
+na origem do dataset de treino: tanto Velloso et
+al.~\cite{velloso2013hars} quanto o Pose
+Trainer~\cite{chen2020poseexercise} coletaram dados próprios, desenhados
+especificamente em torno dos erros de execução que cada sistema se propõe
+a detectar, enquanto este trabalho reaproveita o dataset publicamente
+disponibilizado pelo Pose Trainer (Seção~2.3) para treinar um classificador
+diferente do que os autores originais propuseram. Essa é uma decisão
+consciente de escopo -- coletar e rotular um dataset próprio, em volume
+suficiente para treinar um classificador supervisionado, estava fora do
+alcance deste trabalho --, mas tem um custo declarado: a cobertura de
+amplitude de movimento e de estilo de câmera do dataset reflete os vídeos
+que o Pose Trainer coletou, não a variabilidade de execução dos usuários
+deste aplicativo, o que sustenta diretamente a limitação discutida na
+Seção~7.1.
+
+Quanto ao tipo de retorno dado ao usuário, este trabalho fica em
+desvantagem frente ao Pose Trainer: as regras geométricas manuais do Pose
+Trainer identificam qual erro específico ocorreu (por exemplo, cotovelo à
+frente do corpo na rosca bíceps), enquanto o classificador deste trabalho
+devolve apenas um veredito binário (correto/incorreto) acompanhado da
+confiança do modelo, sem indicar a causa do erro. Adicionar uma camada de
+diagnóstico -- por exemplo, regras geométricas complementares ao
+classificador, no mesmo espírito do Pose Trainer -- é um caminho natural
+de evolução, não explorado neste trabalho. A restrição computacional de
+produção também distingue os três trabalhos: Velloso et al. processam
+sinais de sensores localmente, sem custo de inferência visual, e o Pose
+Trainer foi avaliado em ambiente de pesquisa sem relato de restrição de
+custo computacional; este trabalho, por rodar num backend de nuvem sem GPU
+dedicada (Azure App Service B1, Seção~5), teve essa restrição como fator
+decisivo na escolha do estimador de pose (MediaPipe em vez de OpenPose,
+Seção~2.2). Essa mesma escolha de produção -- classificar um único quadro
+de pico por repetição, e não a trajetória completa -- tem um custo
+estrutural: erros de controle e velocidade de execução (por exemplo,
+descida brusca do halter ou uso de impulso do corpo) não aparecem no
+quadro de pico isoladamente e, portanto, são invisíveis ao classificador
+por construção, ainda que sejam exatamente o tipo de erro que as regras
+geométricas ou a comparação por trajetória do Pose Trainer conseguem
+capturar.
+
+Os números reportados pelos três trabalhos (98,03\% de acurácia em
+Velloso et al.; F1-scores entre 0,73 e 1,00 no Pose Trainer; 79\% e 85\%
+de acurácia neste trabalho, Seção~7) não são diretamente comparáveis entre
+si: cada um usa datasets, exercícios, conjuntos de classes e protocolos de
+avaliação diferentes, e a ressalva de particionamento por quadro discutida
+na Seção~7.1 se aplica só a este trabalho. Ainda assim, nenhum dos três
+trabalhos revisados entrega esse tipo de análise -- repetição a repetição,
+por exercício -- dentro de uma aplicação de uso cotidiano, executada em
+nuvem sem hardware especializado: é essa combinação, mais do que a
+acurácia isolada de um classificador, que posiciona a contribuição deste
+trabalho frente à revisão tecnológica.
 
 \section{Arquitetura do Sistema}
 
