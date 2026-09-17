@@ -219,6 +219,16 @@ OpenPose (Seção~2.3) e a inferência em produção usa MediaPipe Pose
 (Seção~4.1), esse descompasso entre estimadores é um fator que sustenta
 parte da limitação discutida na Seção~7.1.
 
+Além da escolha do estimador, a posição da câmera em relação ao corpo
+também afeta a qualidade da estimativa de pose. Aguilar-Ortega et
+al.~\cite{aguilarortega2023uco} comparam diversos estimadores de pose
+sobre um dataset próprio de reabilitação física com 27 sujeitos e 8
+exercícios, gravados simultaneamente por 5 câmeras RGB em ângulos
+diferentes e com gabarito obtido por um sistema de rastreamento
+infravermelho; os autores encontram diferença estatisticamente
+significativa de acurácia entre posições de câmera, com a vista frontal
+favorecida sobre as demais.
+
 \subsection{Sistemas de Correção de Exercícios Baseados em Visão Computacional}
 
 Chen e Yang~\cite{chen2020poseexercise} propuseram o Pose Trainer, sistema
@@ -669,7 +679,13 @@ não há registro sistemático de taxa de erro por posição de câmera, e o
 mesma causa raiz: o dataset reaproveitado de
 terceiros~\cite{chen2020posetrainerrepo} foi filmado num estilo específico
 de posicionamento de câmera, e o ângulo de projeção 2D de uma mesma
-execução muda conforme a câmera muda de posição. Um experimento
+execução muda conforme a câmera muda de posição. Essa hipótese ganha
+plausibilidade externa de um estudo com protocolo controlado e gabarito
+por rastreamento infravermelho, que mede diferença estatisticamente
+significativa de acurácia de estimativa de pose entre posições de
+câmera~\cite{aguilarortega2023uco} (Seção~2.2) -- o achado não comprova o
+efeito neste sistema especificamente, mas indica que o mecanismo é real e
+mensurável em contexto próximo. Um experimento
 controlado -- mesma execução repetida em três posições de câmera, com taxa
 de erro de classificação medida por posição -- é proposto como trabalho
 futuro (Seção~8) para isolar esse fator da amplitude de movimento.
