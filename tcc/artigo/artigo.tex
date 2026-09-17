@@ -263,15 +263,16 @@ produção.
 
 O sistema é dividido em três componentes principais: um aplicativo móvel
 (cliente), um backend HTTP/WebSocket e um módulo de aprendizado de máquina
-responsável pela classificação da execução dos exercícios. A
-Figura~\ref{fig:usecases} apresenta o diagrama de casos de uso do sistema,
-que resume as principais interações do usuário com o aplicativo.
+responsável pela classificação da execução dos exercícios -- este último
+executado no mesmo processo do backend, não como um serviço separado. A
+Figura~\ref{fig:arquitetura} apresenta o diagrama de componentes do
+sistema e sua implantação na infraestrutura de nuvem (Seção~5).
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=.9\textwidth]{diagrama_use_cases.jpg}
-\caption{Diagrama de casos de uso do sistema}
-\label{fig:usecases}
+\includegraphics[width=.95\textwidth]{diagrama_arquitetura.jpg}
+\caption{Diagrama de componentes do sistema e sua implantação em nuvem}
+\label{fig:arquitetura}
 \end{figure}
 \FloatBarrier
 
@@ -287,7 +288,17 @@ de calorias (heurística linear que multiplica o tempo de treino pelo peso
 corporal do usuário por um fator fixo por gênero, sem base em tabela de
 gasto metabólico por exercício); histórico e estatísticas mensais de
 treino; e a tela do detector, onde o usuário grava ou seleciona um vídeo
-para análise de execução.
+para análise de execução. A Figura~\ref{fig:usecases} apresenta o diagrama
+de casos de uso do sistema, detalhando essas interações do usuário com o
+aplicativo.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=.9\textwidth]{diagrama_use_cases.jpg}
+\caption{Diagrama de casos de uso do sistema}
+\label{fig:usecases}
+\end{figure}
+\FloatBarrier
 
 A comunicação com o backend é feita via HTTP (API REST, com
 \textit{token} JWT anexado a cada requisição) e, no caso do detector,
