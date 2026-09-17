@@ -441,6 +441,27 @@ decodificar quadros que seriam descartados pela taxa de amostragem,
 reduzindo o tempo de processamento sem alterar o resultado da
 classificação.
 
+\subsection{Privacidade e Retenção de Dados}
+
+O módulo de detecção envia, do celular do usuário ao backend, um vídeo no
+qual a pessoa que está treinando é identificável -- dado pessoal sensível
+sob a Lei Geral de Proteção de Dados (LGPD, Lei 13.709/2018). O tratamento
+implementado, porém, é efêmero: o vídeo recebido é gravado em um arquivo
+temporário do sistema operacional do servidor, processado quadro a quadro,
+e removido assim que a análise termina, dentro de um bloco de finalização
+executado mesmo em caso de erro durante o processamento -- não há gravação
+em disco persistente, banco de dados ou armazenamento de objetos
+(\textit{blob storage}) na Azure. Também não há persistência do resultado
+da classificação: o backend devolve, na própria resposta HTTP, apenas os
+derivados numéricos da análise (número de repetições, classificação e
+confiança por repetição), que o aplicativo exibe ao usuário mas não
+reenvia ao servidor para armazenamento. Essa arquitetura reduz a
+superfície de exposição de dados pessoais sensíveis, mas a implementação
+atual não inclui uma tela de consentimento explícito informando ao
+usuário, antes do envio, que o vídeo será transmitido a um servidor remoto
+para processamento -- uma lacuna sob a ótica de finalidade e transparência
+exigidas pela LGPD, ainda que o dado, uma vez recebido, não seja retido.
+
 \section{Implantação em Nuvem}
 
 Para validar o sistema fora do ambiente de desenvolvimento local, o
