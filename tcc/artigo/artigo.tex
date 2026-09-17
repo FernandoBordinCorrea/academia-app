@@ -30,36 +30,32 @@
 \maketitle
 
 \begin{abstract}
-  Incorrect execution of resistance-training exercises is a common cause of
-  injury and reduced training effectiveness, and beginners rarely have
-  access to a professional supervising every repetition. This work presents
-  a mobile application for workout planning and logging that also detects,
-  from a smartphone camera, whether a given repetition of an exercise was
-  performed correctly. The system combines pose estimation (MediaPipe Pose)
-  with a per-exercise supervised classifier (Random Forest or SVM,
-  selected by cross-validation) trained on joint angles extracted at the
-  peak of each repetition. We describe the system's architecture (React
-  Native/Expo client, FastAPI backend, PostgreSQL/SQLite persistence),
-  the video-analysis pipeline used for classification, the cloud deployment
-  on Microsoft Azure, and a training-dataset coverage gap for high-amplitude
-  repetitions found along the way.
+  Incorrect execution of resistance-training exercises is a common cause
+  of injury and reduced effectiveness, and beginners rarely have a
+  professional supervising every repetition. This work presents a
+  workout-management mobile app that also detects, from smartphone video,
+  whether a repetition was performed correctly, estimating pose with
+  MediaPipe and classifying each repetition's peak frame with a
+  per-exercise model: a fixed Random Forest for front raise, and a
+  cross-validated choice among Random Forest, Gradient Boosting and SVM
+  for biceps curl. The paper covers the system's architecture and cloud
+  deployment, plus dataset and evaluation-protocol limitations, including
+  an amplitude-coverage gap and a train/inference sampling mismatch.
 \end{abstract}
 
 \begin{resumo}
-  A execução incorreta de exercícios de musculação é uma causa comum de
-  lesões e de baixa efetividade do treino, e iniciantes raramente têm
-  acesso a um profissional supervisionando cada repetição. Este trabalho
-  apresenta um aplicativo móvel de planejamento e registro de treinos que
-  também detecta, a partir da câmera do celular, se uma repetição de um
-  exercício foi executada corretamente. O sistema combina estimativa de
-  pose (MediaPipe Pose) com um classificador supervisionado por exercício
-  (Random Forest ou SVM, escolhido por validação cruzada) treinado sobre
-  ângulos articulares extraídos no pico de cada repetição. Descrevemos a
-  arquitetura do sistema (cliente React Native/Expo, backend FastAPI,
-  persistência em PostgreSQL/SQLite), o pipeline de análise de vídeo usado
-  na classificação, a implantação em nuvem na Microsoft Azure e uma lacuna
-  de cobertura do dataset de treino para repetições de amplitude elevada,
-  encontrada ao longo do desenvolvimento.
+  A execução incorreta de exercícios de musculação é causa comum de
+  lesões e de baixa efetividade do treino, e iniciantes raramente contam
+  com um profissional supervisionando cada repetição. Este trabalho
+  apresenta um app móvel de gerenciamento de treinos que também detecta,
+  a partir de vídeo do celular, se uma repetição foi executada
+  corretamente, estimando a pose com o MediaPipe e classificando o quadro
+  de pico com um modelo por exercício: Random Forest fixo para elevação
+  frontal, e uma escolha por validação cruzada entre Random Forest,
+  Gradient Boosting e SVM para rosca bíceps. O artigo cobre a arquitetura
+  do sistema e a implantação em nuvem, além de limitações do dataset de
+  treino e da avaliação, entre elas uma lacuna de amplitude e um
+  descasamento de amostragem entre treino e inferência.
 \end{resumo}
 
 \section{Introdução}
@@ -461,7 +457,13 @@ treino compara três algoritmos -- Random Forest, Gradient Boosting e
 SVM~\cite{cortes1995svm} -- cada um com busca de hiperparâmetros via
 validação cruzada (5-fold, otimizando F1 macro), e seleciona
 automaticamente o de melhor desempenho; na versão atual do modelo, o
-selecionado foi um SVM com kernel RBF.
+selecionado foi um SVM com kernel RBF. Essa seleção automática entre
+candidatos não foi replicada para a elevação frontal: o script de treino
+desse exercício não foi atualizado para comparar múltiplos algoritmos,
+permanecendo com o Random Forest fixo da versão original do projeto --
+uma assimetria de sofisticação entre os dois pipelines de treino, não uma
+escolha deliberada de que o Random Forest seja necessariamente superior
+para esse exercício.
 
 Os modelos foram treinados sobre o dataset de poses do projeto Pose
 Trainer~\cite{chen2020posetrainerrepo} (Seção~2), com sequências de
