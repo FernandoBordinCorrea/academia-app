@@ -336,9 +336,9 @@ especificamente em torno dos erros de execução que cada sistema se propõe
 a detectar, enquanto este trabalho reaproveita o dataset publicamente
 disponibilizado pelo Pose Trainer (Seção~2.3) para treinar um classificador
 diferente do que os autores originais propuseram. Essa é uma decisão
-consciente de escopo -- coletar e rotular um dataset próprio, em volume
+consciente de escopo (coletar e rotular um dataset próprio, em volume
 suficiente para treinar um classificador supervisionado, estava fora do
-alcance deste trabalho --, mas tem um custo declarado: a cobertura de
+alcance deste trabalho), mas tem um custo declarado: a cobertura de
 amplitude de movimento e de estilo de câmera do dataset reflete os vídeos
 que o Pose Trainer coletou, não a variabilidade de execução dos usuários
 deste aplicativo, o que sustenta diretamente a limitação discutida na
@@ -702,9 +702,9 @@ autor deste trabalho (segurando o celular, tipicamente numa altura e
 ângulo mais próximos dos olhos, acompanhando o movimento) o modelo
 classifica errado; quando o autor se grava, com a câmera fixa em algum
 apoio e normalmente numa altura mais baixa, a classificação funciona
-corretamente. Essa observação não constitui um experimento controlado --
-não há registro sistemático de taxa de erro por posição de câmera, e o
-único sujeito testado foi o próprio autor --, mas é consistente com a
+corretamente. Essa observação não constitui um experimento controlado
+(não há registro sistemático de taxa de erro por posição de câmera, e o
+único sujeito testado foi o próprio autor), mas é consistente com a
 mesma causa raiz: o dataset reaproveitado de
 terceiros~\cite{chen2020posetrainerrepo} foi filmado num estilo específico
 de posicionamento de câmera, e o ângulo de projeção 2D de uma mesma
