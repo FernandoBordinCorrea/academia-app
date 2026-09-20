@@ -343,6 +343,7 @@ trabalho frente à revisão tecnológica.
 \label{tab:comparacao}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.0}
 \begin{tabular}{p{2.4cm}p{3.7cm}p{3.6cm}p{3.9cm}}
 \hline
 \textbf{Eixo} & \textbf{Velloso et al.} & \textbf{Pose Trainer} & \textbf{Este trabalho} \\
@@ -350,31 +351,31 @@ trabalho frente à revisão tecnológica.
 Sensor &
 IMU vestível (luva, bracelete, cinto lombar, halter) &
 Câmera comum de \textit{smartphone} &
-Câmera comum de \textit{smartphone} \\[1pt]
+Câmera comum de \textit{smartphone} \\ \hline
 Estratégia de decisão &
 Classificador supervisionado sobre séries temporais de sinais inerciais &
 Regras geométricas manuais + DTW/kNN contra trajetórias de referência &
-Classificador supervisionado (RF/SVM) sobre o quadro de pico da repetição \\[1pt]
+Classificador supervisionado (RF/SVM) sobre o quadro de pico da repetição \\ \hline
 Granularidade &
 Repetição, em protocolo de laboratório &
 Vídeo/execução completa &
-Repetição, segmentada automaticamente pela detecção de repouso \\[1pt]
+Repetição, segmentada automaticamente pela detecção de repouso \\ \hline
 Feedback ao usuário &
 Classe de erro específica (A--E) &
 Qual erro geométrico ocorreu &
-Só correto/incorreto + confiança \\[1pt]
+Só correto/incorreto + confiança \\ \hline
 Origem do dataset &
 Coletado pelos autores, desenhado para as 5 classes-alvo &
 Coletado pelos autores, desenhado para os 4 exercícios e erros-alvo &
-Reaproveitado de terceiros (Pose Trainer), não desenhado para este app \\[1pt]
+Reaproveitado de terceiros (Pose Trainer), não desenhado para este app \\ \hline
 Restrição computacional em produção &
 Não se aplica (sinais processados localmente) &
 Ambiente de pesquisa, sem restrição de custo relatada &
-Nuvem sem GPU (Azure App Service B1) \\[1pt]
+Nuvem sem GPU (Azure App Service B1) \\ \hline
 Custo da estratégia &
 Janela deslizante sobre toda a série temporal &
 Trajetória completa da execução &
-Um único quadro de pico por repetição; trajetória não observada \\[1pt]
+Um único quadro de pico por repetição; trajetória não observada \\ \hline
 Integração &
 Não relatada &
 Ferramenta de análise isolada &
