@@ -9,6 +9,7 @@
 \usepackage{sbc-template}
 \usepackage{graphicx,url}
 \usepackage{placeins}
+\usepackage{array}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[provide=*,brazilian]{babel}
@@ -37,25 +38,25 @@
   whether a repetition was performed correctly, estimating pose with
   MediaPipe and classifying each repetition's peak frame with a
   per-exercise model: a fixed Random Forest for front raise, and a
-  cross-validated choice among Random Forest, Gradient Boosting and SVM
-  for biceps curl. The paper covers the system's architecture and cloud
-  deployment, plus dataset and evaluation-protocol limitations, including
-  an amplitude-coverage gap and a train/inference sampling mismatch.
+  cross-validated choice among Random Forest, Gradient Boosting and
+  Support Vector Machine for biceps curl. The paper covers the
+  architecture, cloud deployment, and dataset and evaluation limitations,
+  including an amplitude-coverage gap and a train/inference sampling
+  mismatch.
 \end{abstract}
 
 \begin{resumo}
   A execução incorreta de exercícios de musculação é causa comum de
-  lesões e de baixa efetividade do treino, e iniciantes raramente contam
-  com um profissional supervisionando cada repetição. Este trabalho
-  apresenta um app móvel de gerenciamento de treinos que também detecta,
-  a partir de vídeo do celular, se uma repetição foi executada
-  corretamente, estimando a pose com o MediaPipe e classificando o quadro
-  de pico com um modelo por exercício: Random Forest fixo para elevação
-  frontal, e uma escolha por validação cruzada entre Random Forest,
-  Gradient Boosting e SVM para rosca bíceps. O artigo cobre a arquitetura
-  do sistema e a implantação em nuvem, além de limitações do dataset de
-  treino e da avaliação, entre elas uma lacuna de amplitude e um
-  descasamento de amostragem entre treino e inferência.
+  lesões e de baixa efetividade do treino, e iniciantes raramente têm um
+  profissional supervisionando cada repetição. Este trabalho apresenta um
+  app móvel de gerenciamento de treinos que detecta, em vídeo do celular,
+  se uma repetição foi executada corretamente, estimando a pose
+  com o MediaPipe e classificando o quadro de pico com um modelo por
+  exercício: Random Forest fixo na elevação frontal e, na rosca bíceps,
+  escolha por validação cruzada entre Random Forest, Gradient Boosting e
+  máquina de vetores de suporte. O artigo cobre arquitetura, implantação
+  em nuvem e limitações do dataset e da avaliação, como lacuna de
+  amplitude e descasamento de amostragem entre treino e inferência.
 \end{resumo}
 
 \section{Introdução}
@@ -180,12 +181,13 @@ abordagem \textit{bottom-up}: emprega \textit{Part Affinity Fields}, uma
 representação vetorial não paramétrica que codifica a posição e orientação
 dos membros do corpo, para associar as partes detectadas aos indivíduos
 corretos mesmo em cenas com múltiplas pessoas. Seu modelo original, treinado
-sobre o dataset COCO, estima 18 pontos-chave do corpo (formato
+sobre o dataset COCO (\textit{Common Objects in Context}), estima 18
+pontos-chave do corpo (formato
 \texttt{BODY\_18}); uma extensão posterior adiciona pontos do pé,
 totalizando 25 pontos-chave (formato \texttt{BODY\_25}). O dataset
 reaproveitado neste trabalho (Seção~2.3) foi gerado com o modelo original de
 18 pontos. Apesar da eficiência relatada pelos autores, o OpenPose depende
-de GPU para rodar em tempo real -- cerca de 22 quadros por segundo em uma
+de uma unidade de processamento gráfico (GPU) para rodar em tempo real -- cerca de 22 quadros por segundo em uma
 GPU NVIDIA GTX 1080 Ti, o que o torna pouco adequado a um backend
 hospedado em uma camada de nuvem sem GPU dedicada, como a usada neste
 trabalho (Seção~5).
@@ -198,7 +200,7 @@ o modelo de estimativa de pose usado neste trabalho. O BlazePose adota um
 uma rede de rastreamento (\textit{tracker}) que estima 33 pontos-chave e a
 região de interesse do quadro seguinte, só reacionando o detector quando a
 pessoa é perdida de vista, projetado especificamente para rodar em tempo
-real em CPU de dispositivos móveis: os próprios autores relatam desempenho
+real na unidade central de processamento (CPU) de dispositivos móveis: os próprios autores relatam desempenho
 de 25 a 75 vezes mais rápido em uma CPU de celular de gama média do que o
 OpenPose rodando em uma CPU desktop de 20 núcleos. Essa característica foi
 decisiva para a escolha do MediaPipe Pose neste trabalho, cujo backend roda
@@ -223,7 +225,7 @@ Além da escolha do estimador, a posição da câmera em relação ao corpo
 também afeta a qualidade da estimativa de pose. Aguilar-Ortega et
 al.~\cite{aguilarortega2023uco} comparam diversos estimadores de pose
 sobre um dataset próprio de reabilitação física com 27 sujeitos e 8
-exercícios, gravados simultaneamente por 5 câmeras RGB em ângulos
+exercícios, gravados simultaneamente por 5 câmeras RGB (vermelho, verde e azul) em ângulos
 diferentes e com gabarito obtido por um sistema de rastreamento
 infravermelho; os autores encontram diferença estatisticamente
 significativa de acurácia entre posições de câmera, com a vista frontal
@@ -242,7 +244,7 @@ geométricas definidas manualmente a partir de diretrizes de
 \textit{personal trainers} -- por exemplo, o ângulo mínimo entre os vetores
 do braço e do antebraço na rosca bíceps -- e, complementarmente, uma
 comparação por \textit{Dynamic Time Warping} (DTW) com classificador do
-vizinho mais próximo, que alinha temporalmente a sequência de poses do
+vizinho mais próximo (kNN, \textit{k-nearest neighbors}), que alinha temporalmente a sequência de poses do
 usuário contra exemplos de referência rotulados como corretos ou incorretos.
 Os autores reportam F1-scores por exercício entre 0,73 (desenvolvimento) e
 1,00 (elevação frontal). É desse projeto que vem o dataset rotulado de
@@ -272,7 +274,9 @@ peso livre.
 \subsection{Posicionamento deste Trabalho}
 
 A Tabela~\ref{tab:comparacao} resume os eixos de comparação relevantes
-entre os três trabalhos revisados e a abordagem adotada aqui.
+entre os três trabalhos revisados e a abordagem adotada aqui, que classifica
+o quadro de pico de cada repetição com \textit{Random Forest} (RF) ou
+máquina de vetores de suporte (SVM), conforme o exercício (Seção~4.2).
 
 O eixo de estratégia de decisão listado na Tabela~\ref{tab:comparacao} não
 esgota o espaço de abordagens da literatura: Parmar, Gharat e
@@ -341,10 +345,11 @@ trabalho frente à revisão tecnológica.
 \centering
 \caption{Comparação entre este trabalho e os sistemas revisados (Seção~2)}
 \label{tab:comparacao}
-\footnotesize
+\fontsize{9}{10.5}\selectfont
 \setlength{\tabcolsep}{4pt}
 \renewcommand{\arraystretch}{1.0}
-\begin{tabular}{p{2.4cm}p{3.7cm}p{3.6cm}p{3.9cm}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\begin{tabular}{L{2.4cm}L{3.7cm}L{3.6cm}L{3.9cm}}
 \hline
 \textbf{Eixo} & \textbf{Velloso et al.} & \textbf{Pose Trainer} & \textbf{Este trabalho} \\
 \hline
@@ -388,7 +393,8 @@ Módulo de um app completo de treino, hospedado em nuvem \\
 \section{Arquitetura do Sistema}
 
 O sistema é dividido em três componentes principais: um aplicativo móvel
-(cliente), um backend HTTP/WebSocket e um módulo de aprendizado de máquina
+(cliente); um backend com interfaces HTTP (\textit{HyperText Transfer
+Protocol}) e WebSocket; e um módulo de aprendizado de máquina
 responsável pela classificação da execução dos exercícios -- este último
 executado no mesmo processo do backend, não como um serviço separado. A
 Figura~\ref{fig:arquitetura} apresenta o diagrama de componentes do
@@ -426,8 +432,11 @@ aplicativo.
 \end{figure}
 \FloatBarrier
 
-A comunicação com o backend é feita via HTTP (API REST, com
-\textit{token} JWT anexado a cada requisição) e, no caso do detector,
+A comunicação com o backend é feita via HTTP, por meio de uma interface de
+programação de aplicações (API, \textit{Application Programming Interface})
+no estilo REST (\textit{Representational State Transfer}), com \textit{token}
+JWT (\textit{JSON Web Token}) anexado a cada requisição, e, no caso do
+detector,
 também via WebSocket para o modo de análise em tempo real (Seção~4.3).
 
 \subsection{Backend}
@@ -436,7 +445,8 @@ O backend é implementado em Python com o \textit{framework}
 FastAPI~\cite{fastapi}, escolhido pelo suporte nativo a rotas assíncronas
 (relevante para o processamento de vídeo do detector, que é
 computacionalmente custoso) e pela geração automática de documentação
-interativa da API. A persistência de dados usa SQLAlchemy como ORM, com
+interativa da API. A persistência de dados usa SQLAlchemy como ORM (\textit{Object-Relational Mapping}, mapeamento
+objeto-relacional), com
 SQLite em desenvolvimento local e PostgreSQL em produção (Seção~5); as
 migrações de esquema são controladas com Alembic. A autenticação é feita
 com \textit{tokens} JWT (biblioteca \texttt{python-jose}) e as senhas são
@@ -509,7 +519,8 @@ treino compara três algoritmos -- Random Forest, Gradient Boosting e
 SVM~\cite{cortes1995svm} -- cada um com busca de hiperparâmetros via
 validação cruzada (5-fold, otimizando F1 macro), e seleciona
 automaticamente o de melhor desempenho; na versão atual do modelo, o
-selecionado foi um SVM com kernel RBF. Essa seleção automática entre
+selecionado foi um SVM com kernel RBF (\textit{radial basis function},
+função de base radial). Essa seleção automática entre
 candidatos não foi replicada para a elevação frontal: o script de treino
 desse exercício não foi atualizado para comparar múltiplos algoritmos,
 permanecendo com o Random Forest fixo da versão original do projeto --
@@ -601,7 +612,7 @@ Microsoft Azure, usando Azure Container Registry para armazenar a imagem,
 Azure App Service (camada B1) para executar o container e Azure Database
 for PostgreSQL (camada B1ms) para persistência -- substituindo o SQLite
 usado em desenvolvimento local. O aplicativo móvel foi então compilado
-como um pacote Android autônomo (\textit{build} EAS, perfil
+como um pacote Android autônomo (\textit{build} no EAS, o \textit{Expo Application Services}, com perfil
 \textit{preview}), já apontando para o backend hospedado na nuvem, sem
 depender de um servidor de desenvolvimento (\textit{Metro}) local.
 
@@ -618,7 +629,8 @@ de elevação frontal e rosca bíceps, rotuladas por vídeo como "correta" ou
 "incorreta". Um script de geração de dataset processa cada vídeo quadro a
 quadro, descarta os quadros em posição de repouso e os de baixa confiança
 de detecção, calcula os ângulos articulares de cada quadro remanescente e
-grava cada um como uma linha independente de um arquivo CSV -- sem
+grava cada um como uma linha independente de um arquivo CSV (\textit{comma-separated values}, valores separados por
+vírgula) -- sem
 preservar qualquer identificador do vídeo ou do usuário de origem daquele
 quadro. A Tabela~\ref{tab:dataset} (Seção~4.2) resume o volume resultante:
 626 linhas a partir de 28 vídeos para elevação frontal, e 1158 linhas a
@@ -814,7 +826,7 @@ confusão para os dois classificadores; (x) um experimento controlado de
 posicionamento de câmera, com a mesma execução repetida em três posições e
 taxa de erro de classificação medida por posição; e (xi) a adoção de uma
 base de cálculo calórico fundamentada -- como o \textit{Compendium of
-Physical Activities} (valores MET por atividade) -- em lugar da heurística
+Physical Activities} (valores de equivalente metabólico da tarefa, MET, por atividade) -- em lugar da heurística
 linear tempo $\times$ peso atualmente usada (Seção~3.1).
 
 \bibliographystyle{sbc}
