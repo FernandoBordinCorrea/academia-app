@@ -274,51 +274,6 @@ peso livre.
 A Tabela~\ref{tab:comparacao} resume os eixos de comparação relevantes
 entre os três trabalhos revisados e a abordagem adotada aqui.
 
-\begin{table}[ht]
-\centering
-\caption{Comparação entre este trabalho e os sistemas revisados (Seção~2)}
-\label{tab:comparacao}
-\footnotesize
-\begin{tabular}{p{2.3cm}p{3.4cm}p{3.3cm}p{3.5cm}}
-\hline
-\textbf{Eixo} & \textbf{Velloso et al.} & \textbf{Pose Trainer} & \textbf{Este trabalho} \\
-\hline
-Sensor &
-IMU vestível (luva, bracelete, cinto lombar, halter) &
-Câmera comum de \textit{smartphone} &
-Câmera comum de \textit{smartphone} \\[4pt]
-Estratégia de decisão &
-Classificador supervisionado sobre séries temporais de sinais inerciais &
-Regras geométricas manuais + DTW/kNN contra trajetórias de referência &
-Classificador supervisionado (RF/SVM) sobre o quadro de pico da repetição \\[4pt]
-Granularidade &
-Repetição, em protocolo de laboratório &
-Vídeo/execução completa &
-Repetição, segmentada automaticamente pela detecção de repouso \\[4pt]
-Feedback ao usuário &
-Classe de erro específica (A--E) &
-Qual erro geométrico ocorreu &
-Só correto/incorreto + confiança \\[4pt]
-Origem do dataset &
-Coletado pelos autores, desenhado para as 5 classes-alvo &
-Coletado pelos autores, desenhado para os 4 exercícios e erros-alvo &
-Reaproveitado de terceiros (Pose Trainer), não desenhado para este app \\[4pt]
-Restrição computacional em produção &
-Não se aplica (sinais processados localmente) &
-Ambiente de pesquisa, sem restrição de custo relatada &
-Nuvem sem GPU (Azure App Service B1) \\[4pt]
-Custo da estratégia &
-Janela deslizante sobre toda a série temporal &
-Trajetória completa da execução &
-Um único quadro de pico por repetição; trajetória não observada \\[4pt]
-Integração &
-Não relatada &
-Ferramenta de análise isolada &
-Módulo de um app completo de treino, hospedado em nuvem \\
-\hline
-\end{tabular}
-\end{table}
-
 O eixo de estratégia de decisão listado na Tabela~\ref{tab:comparacao} não
 esgota o espaço de abordagens da literatura: Parmar, Gharat e
 Rhodin~\cite{parmar2022workout} avaliam erro de forma em agachamento,
@@ -381,6 +336,53 @@ por exercício -- dentro de uma aplicação de uso cotidiano, executada em
 nuvem sem hardware especializado: é essa combinação, mais do que a
 acurácia isolada de um classificador, que posiciona a contribuição deste
 trabalho frente à revisão tecnológica.
+
+\begin{table}[!ht]
+\centering
+\caption{Comparação entre este trabalho e os sistemas revisados (Seção~2)}
+\label{tab:comparacao}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.4cm}p{3.7cm}p{3.6cm}p{3.9cm}}
+\hline
+\textbf{Eixo} & \textbf{Velloso et al.} & \textbf{Pose Trainer} & \textbf{Este trabalho} \\
+\hline
+Sensor &
+IMU vestível (luva, bracelete, cinto lombar, halter) &
+Câmera comum de \textit{smartphone} &
+Câmera comum de \textit{smartphone} \\[1pt]
+Estratégia de decisão &
+Classificador supervisionado sobre séries temporais de sinais inerciais &
+Regras geométricas manuais + DTW/kNN contra trajetórias de referência &
+Classificador supervisionado (RF/SVM) sobre o quadro de pico da repetição \\[1pt]
+Granularidade &
+Repetição, em protocolo de laboratório &
+Vídeo/execução completa &
+Repetição, segmentada automaticamente pela detecção de repouso \\[1pt]
+Feedback ao usuário &
+Classe de erro específica (A--E) &
+Qual erro geométrico ocorreu &
+Só correto/incorreto + confiança \\[1pt]
+Origem do dataset &
+Coletado pelos autores, desenhado para as 5 classes-alvo &
+Coletado pelos autores, desenhado para os 4 exercícios e erros-alvo &
+Reaproveitado de terceiros (Pose Trainer), não desenhado para este app \\[1pt]
+Restrição computacional em produção &
+Não se aplica (sinais processados localmente) &
+Ambiente de pesquisa, sem restrição de custo relatada &
+Nuvem sem GPU (Azure App Service B1) \\[1pt]
+Custo da estratégia &
+Janela deslizante sobre toda a série temporal &
+Trajetória completa da execução &
+Um único quadro de pico por repetição; trajetória não observada \\[1pt]
+Integração &
+Não relatada &
+Ferramenta de análise isolada &
+Módulo de um app completo de treino, hospedado em nuvem \\
+\hline
+\end{tabular}
+\end{table}
+\FloatBarrier
 
 \section{Arquitetura do Sistema}
 
