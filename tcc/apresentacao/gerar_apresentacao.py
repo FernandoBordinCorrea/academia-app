@@ -415,7 +415,7 @@ s, bt = content_slide("Aplicativo Móvel", 9, subheading="React Native + Expo (A
 add_bullets(s, [
     "Autenticação de usuário",
     "Cadastro de exercícios e montagem de fichas de treino (séries, repetições, carga)",
-    "Execução de sessões com cronômetro e estimativa de calorias",
+    "Execução de sessões com cronômetro",
     "Histórico e estatísticas mensais de treino",
     "Tela do detector: grava ou seleciona um vídeo para análise de execução",
 ], top=bt, size=18, space_after=16)
