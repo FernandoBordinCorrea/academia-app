@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, Modal } from 'react-native';
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,10 +31,6 @@ export default function DetectorScreen({ navigation }) {
   const [showVideo, setShowVideo] = useState(false);
   const [torchOn, setTorchOn]     = useState(false);
   const [exercicio, setExercicio] = useState('frontraise');
-  const [localUrl, setLocalUrl]         = useState('');
-  const [comparando, setComparando]     = useState(false);
-  const [resultadoLocal, setResultadoLocal] = useState(null);
-  const [erroLocal, setErroLocal]       = useState('');
   const [salvoGaleria, setSalvoGaleria] = useState(false);
 
   const cameraRef             = useRef(null);
@@ -52,10 +48,6 @@ export default function DetectorScreen({ navigation }) {
   }, [showVideo]);
 
   useEffect(() => {
-    AsyncStorage.getItem('localServerUrl').then(saved => {
-      if (saved) setLocalUrl(saved);
-    });
-
     return () => {
       clearInterval(timerRef.current);
       // Restaura brilho original ao sair da tela
@@ -226,48 +218,8 @@ export default function DetectorScreen({ navigation }) {
     }
   };
 
-  const compararLocal = async () => {
-    const url = localUrl.trim().replace(/\/+$/, '');
-    if (!url) {
-      setErroLocal('Informe o endereço do servidor local (ex: http://192.168.0.x:8000)');
-      return;
-    }
-    if (!videoUri) return;
-
-    setComparando(true);
-    setErroLocal('');
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 90000);
-    try {
-      await AsyncStorage.setItem('localServerUrl', url);
-      const token = await AsyncStorage.getItem('token');
-      const formData = new FormData();
-      formData.append('video', { uri: videoUri, type: 'video/mp4', name: 'exercise.mp4' });
-
-      const response = await fetch(`${url}/detector/analyze?exercise=${exercicio}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
-        signal: controller.signal,
-      });
-
-      if (!response.ok) throw new Error(`Servidor retornou ${response.status}`);
-      setResultadoLocal(await response.json());
-    } catch (e) {
-      const msg = e?.name === 'AbortError'
-        ? 'Comparação demorou demais (mais de 90s)'
-        : `Erro ao comparar: ${e?.message ?? 'verifique o endereço e se está na mesma rede'}`;
-      setErroLocal(msg);
-    } finally {
-      clearTimeout(timeout);
-      setComparando(false);
-    }
-  };
-
   const reiniciar = () => {
     setResultado(null);
-    setResultadoLocal(null);
-    setErroLocal('');
     setVideoUri(null);
     setSalvoGaleria(false);
     setTela('idle');
@@ -336,9 +288,7 @@ export default function DetectorScreen({ navigation }) {
               </TouchableOpacity>
             </View>
             <Text style={styles.instrucaoText}>
-              {exercicio === 'frontraise'
-                ? 'Posicione a câmera de lado e fique de lateral para ela'
-                : 'Posicione a câmera de lado e fique de lateral para ela'}
+              Posicione a câmera de lado e fique de lateral para ela
             </Text>
           </View>
           <View style={styles.bottomOverlay}>
@@ -417,7 +367,7 @@ export default function DetectorScreen({ navigation }) {
       {tela === 'results' && resultado && (
         <SafeAreaView style={[styles.fullOverlay, { backgroundColor: '#121212' }]}>
           <ScrollView contentContainerStyle={styles.resultsContent} showsVerticalScrollIndicator={false}>
-            <Text style={styles.resultsTitulo}>Resultado · Nuvem</Text>
+            <Text style={styles.resultsTitulo}>Resultado</Text>
 
             <Text style={styles.resultsReps}>{resultado.reps}</Text>
             <Text style={styles.resultsRepsLabel}>repetições detectadas</Text>
@@ -452,61 +402,6 @@ export default function DetectorScreen({ navigation }) {
                 Nenhuma repetição detectada. Certifique-se de ficar de lateral para a câmera.
               </Text>
             )}
-
-            {/* ── Comparar com servidor local ── */}
-            <View style={styles.compareBox}>
-              <Text style={styles.compareLabel}>Comparar com servidor local</Text>
-              <View style={styles.compareRow}>
-                <TextInput
-                  style={styles.compareInput}
-                  placeholder="http://192.168.0.x:8000"
-                  placeholderTextColor="#555"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="url"
-                  value={localUrl}
-                  onChangeText={setLocalUrl}
-                />
-                <TouchableOpacity style={styles.compareBtn} onPress={compararLocal} disabled={comparando}>
-                  {comparando
-                    ? <ActivityIndicator color="#121212" size="small" />
-                    : <Ionicons name="git-compare-outline" size={20} color="#121212" />
-                  }
-                </TouchableOpacity>
-              </View>
-              {!!erroLocal && <Text style={styles.compareErro}>{erroLocal}</Text>}
-
-              {resultadoLocal && (
-                <View style={styles.compareResult}>
-                  <Text style={styles.resultsTitulo}>Resultado · Local</Text>
-                  <Text style={styles.resultsReps}>{resultadoLocal.reps}</Text>
-                  <Text style={styles.resultsRepsLabel}>repetições detectadas</Text>
-                  <View style={styles.summaryRow}>
-                    <View style={styles.summaryBox}>
-                      <Text style={[styles.summaryNum, { color: '#4CAF50' }]}>{resultadoLocal.corretos}</Text>
-                      <Text style={styles.summaryLabel}>corretas</Text>
-                    </View>
-                    <View style={styles.summaryDivider} />
-                    <View style={styles.summaryBox}>
-                      <Text style={[styles.summaryNum, { color: '#F44336' }]}>{resultadoLocal.incorretos}</Text>
-                      <Text style={styles.summaryLabel}>incorretas</Text>
-                    </View>
-                  </View>
-                  {resultadoLocal.detalhes?.length > 0 && (
-                    <View style={styles.detalhesList}>
-                      {resultadoLocal.detalhes.map((item) => (
-                        <View key={item.rep} style={styles.detalheItem}>
-                          <Text style={styles.detalheRep}>Rep {item.rep}</Text>
-                          <Text style={[styles.detalheLabel, { color: item.correto ? '#4CAF50' : '#F44336' }]}>
-                            {item.label}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              )}
-            </View>
           </ScrollView>
 
           {videoUri && (

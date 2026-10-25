@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
+from sqlalchemy import desc, extract
 from typing import Dict, List
 from datetime import datetime
 from database import get_db
@@ -55,7 +55,8 @@ def get_monthly_stats(db: Session = Depends(get_db), current_user: User = Depend
         db.query(WorkoutSession)
         .filter(
             WorkoutSession.user_id == current_user.id,
-            func.strftime('%Y-%m', WorkoutSession.performed_at) == now.strftime('%Y-%m'),
+            extract('year', WorkoutSession.performed_at) == now.year,
+            extract('month', WorkoutSession.performed_at) == now.month,
         )
         .all()
     )
