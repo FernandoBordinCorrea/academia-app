@@ -17,7 +17,7 @@ function formatDate(date) {
 
 export default function HomeScreen({ navigation }) {
   const { user, logout } = useAuth();
-  const [stats, setStats] = useState({ total_workouts: 0, total_calories: 0 });
+  const [stats, setStats] = useState({ total_workouts: 0 });
   const today = new Date();
 
   useFocusEffect(
@@ -43,11 +43,6 @@ export default function HomeScreen({ navigation }) {
         <Ionicons name="barbell-outline" size={18} color="#E8FF47" />
         <Text style={styles.statText}>
           <Text style={styles.statHighlight}>{stats.total_workouts}</Text> treinos
-        </Text>
-        <Text style={styles.statDivider}>·</Text>
-        <Ionicons name="flame-outline" size={18} color="#E8FF47" />
-        <Text style={styles.statText}>
-          <Text style={styles.statHighlight}>{stats.total_calories}</Text> kcal
         </Text>
         <Text style={styles.statDivider}>este mês</Text>
       </View>

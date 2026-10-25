@@ -65,7 +65,6 @@ class WorkoutSession(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     workout_id = Column(Integer, ForeignKey("workouts.id"), nullable=False)
     duration_seconds = Column(Integer, nullable=False)
-    calories_burned = Column(Float, nullable=True)
     performed_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User")

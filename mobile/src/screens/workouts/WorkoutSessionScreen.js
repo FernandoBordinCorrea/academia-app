@@ -3,7 +3,6 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator 
 import Animated, { FadeIn, FadeOut, LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import styles from './WorkoutSessionScreen.styles';
 import { useModal } from '../../context/ModalContext';
@@ -17,11 +16,6 @@ function formatTime(seconds) {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-}
-
-function calcCalories(seconds, weight, gender) {
-  const factor = gender === 'M' ? 0.07 : 0.06;
-  return Math.round((seconds / 60) * weight * factor);
 }
 
 function lastFilledSet(setLogs) {
@@ -165,7 +159,6 @@ function ExerciseSessionCard({ item, session, isExpanded, onToggle, setWeight, s
 export default function WorkoutSessionScreen({ route, navigation }) {
   const { show } = useModal();
   const { workout } = route.params;
-  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const {
     session, elapsed, startSession, endSession, setWeight, setRep, setSetField,
@@ -236,10 +229,6 @@ export default function WorkoutSessionScreen({ route, navigation }) {
   async function handleFinish() {
     const finalElapsed = getFinalElapsed();
 
-    const calories = user?.weight && user?.gender
-      ? calcCalories(finalElapsed, user.weight, user.gender)
-      : null;
-
     const logs = workout.items.map((item) => {
       const filledSets = (session.setLogs[item.exercise_id] || [])
         .map((s, i) => ({ set_number: i + 1, weight: s.weight, reps: s.reps }))
@@ -262,7 +251,6 @@ export default function WorkoutSessionScreen({ route, navigation }) {
       await api.post('/sessions/', {
         workout_id: workout.id,
         duration_seconds: finalElapsed,
-        calories_burned: calories,
         logs,
       });
     } catch {
@@ -270,10 +258,9 @@ export default function WorkoutSessionScreen({ route, navigation }) {
     }
 
     endSession();
-    const caloriesLine = calories !== null ? `\nCalorias: ~${calories} kcal` : '';
     show(
       'Treino finalizado!',
-      `Duração: ${formatTime(finalElapsed)}${caloriesLine}`,
+      `Duração: ${formatTime(finalElapsed)}`,
       [{ text: 'OK', onPress: () => navigation.goBack() }]
     );
   }
@@ -295,14 +282,6 @@ export default function WorkoutSessionScreen({ route, navigation }) {
         <Text style={styles.timerLabel}>TEMPO DE TREINO</Text>
         <Text style={styles.timer}>{formatTime(elapsed)}</Text>
         <Text style={styles.workoutName}>{workout.name}</Text>
-        {user?.weight && user?.gender && (
-          <View style={styles.caloriesRow}>
-            <Ionicons name="flame-outline" size={14} color="#E8FF47" />
-            <Text style={styles.caloriesText}>
-              ~{calcCalories(elapsed, user.weight, user.gender)} kcal
-            </Text>
-          </View>
-        )}
       </View>
 
       <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>

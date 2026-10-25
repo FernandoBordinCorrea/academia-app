@@ -21,7 +21,6 @@ def create_session(data: WorkoutSessionCreate, db: Session = Depends(get_db), cu
         user_id=current_user.id,
         workout_id=data.workout_id,
         duration_seconds=data.duration_seconds,
-        calories_burned=data.calories_burned,
     )
     db.add(session)
     db.flush()
@@ -61,8 +60,7 @@ def get_monthly_stats(db: Session = Depends(get_db), current_user: User = Depend
         .all()
     )
     total_workouts = len(sessions)
-    total_calories = sum(s.calories_burned for s in sessions if s.calories_burned is not None)
-    return {"total_workouts": total_workouts, "total_calories": round(total_calories)}
+    return {"total_workouts": total_workouts}
 
 
 @router.get("/last-log/{workout_id}", response_model=Dict[int, LastExerciseLogResponse])
@@ -133,7 +131,6 @@ def get_sessions_by_date(db: Session = Depends(get_db), current_user: User = Dep
         result[date_str].append({
             "workout_name": session.workout.name,
             "duration_seconds": session.duration_seconds,
-            "calories_burned": session.calories_burned,
         })
 
     return result

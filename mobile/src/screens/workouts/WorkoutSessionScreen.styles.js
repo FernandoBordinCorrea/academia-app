@@ -39,17 +39,6 @@ export default StyleSheet.create({
     marginTop: 10,
     fontWeight: '600',
   },
-  caloriesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 6,
-  },
-  caloriesText: {
-    color: '#E8FF47',
-    fontSize: 13,
-    fontWeight: '600',
-  },
   list: {
     flex: 1,
   },

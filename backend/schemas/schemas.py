@@ -149,7 +149,6 @@ class SessionExerciseLogCreate(BaseModel):
 class WorkoutSessionCreate(BaseModel):
     workout_id: int
     duration_seconds: int
-    calories_burned: Optional[float] = None
     logs: List[SessionExerciseLogCreate]
 
 
@@ -185,7 +184,6 @@ class WorkoutSessionResponse(BaseModel):
     id: int
     workout_id: int
     duration_seconds: int
-    calories_burned: Optional[float]
     performed_at: datetime
     logs: List[SessionExerciseLogResponse]
 
