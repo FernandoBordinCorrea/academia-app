@@ -54,7 +54,9 @@ export default function ExerciseListScreen({ navigation }) {
       <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('ExerciseDetail', { exercise: item })}>
         <View style={styles.cardInfo}>
           <Text style={styles.cardName}>{item.name}</Text>
-          <Text style={styles.cardDetail}>{item.sets} séries · {item.reps} reps · {item.weight}kg</Text>
+          <Text style={styles.cardDetail}>
+            {item.last_weight != null ? `Último: ${item.last_weight}kg · ${item.last_reps} reps` : 'Sem histórico ainda'}
+          </Text>
         </View>
         <View style={styles.cardActions}>
           <TouchableOpacity onPress={() => navigation.navigate('ExerciseForm', { exercise: item })}>

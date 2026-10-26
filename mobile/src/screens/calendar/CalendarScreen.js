@@ -120,15 +120,6 @@ export default function CalendarScreen() {
                     <View style={styles.sessionStatsRow}>
                       <Ionicons name="time-outline" size={13} color="#aaa" />
                       <Text style={styles.sessionStat}>{formatDuration(item.duration_seconds)}</Text>
-                      {item.calories_burned != null && (
-                        <>
-                          <Text style={styles.sessionStatDivider}>·</Text>
-                          <Ionicons name="flame-outline" size={13} color="#E8FF47" />
-                          <Text style={[styles.sessionStat, { color: '#E8FF47' }]}>
-                            ~{Math.round(item.calories_burned)} kcal
-                          </Text>
-                        </>
-                      )}
                     </View>
                   </View>
                 </View>

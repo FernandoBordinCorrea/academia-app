@@ -59,10 +59,6 @@ export default StyleSheet.create({
     color: '#aaa',
     fontSize: 13,
   },
-  sessionStatDivider: {
-    color: '#444',
-    fontSize: 13,
-  },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',

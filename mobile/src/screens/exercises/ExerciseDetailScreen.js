@@ -46,7 +46,7 @@ export default function ExerciseDetailScreen({ route, navigation }) {
 
   const chartData = hasHistory
     ? {
-        labels: history.map((h) => h.date),
+        labels: history.map((h, i) => (i > 0 && history[i - 1].date === h.date) ? '' : h.date),
         datasets: [
           {
             data: history.map((h) => h.weight_used),
@@ -54,7 +54,7 @@ export default function ExerciseDetailScreen({ route, navigation }) {
             strokeWidth: 2,
           },
           {
-            data: history.map((h) => h.reps_used ?? exercise.reps),
+            data: history.map((h) => h.reps_used ?? exercise.last_reps ?? 0),
             color: () => '#888',
             strokeWidth: 2,
           },
@@ -78,19 +78,14 @@ export default function ExerciseDetailScreen({ route, navigation }) {
 
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
-          <MaterialCommunityIcons name="repeat" size={20} color="#E8FF47" />
-          <Text style={styles.statValue}>{exercise.sets}</Text>
-          <Text style={styles.statLabel}>séries</Text>
-        </View>
-        <View style={styles.statCard}>
           <Ionicons name="flash-outline" size={20} color="#E8FF47" />
-          <Text style={styles.statValue}>{exercise.reps}</Text>
-          <Text style={styles.statLabel}>reps</Text>
+          <Text style={styles.statValue}>{exercise.last_reps ?? '-'}</Text>
+          <Text style={styles.statLabel}>últimas reps</Text>
         </View>
         <View style={styles.statCard}>
           <MaterialCommunityIcons name="weight-kilogram" size={20} color="#E8FF47" />
-          <Text style={styles.statValue}>{exercise.weight}</Text>
-          <Text style={styles.statLabel}>kg</Text>
+          <Text style={styles.statValue}>{exercise.last_weight ?? '-'}</Text>
+          <Text style={styles.statLabel}>último kg</Text>
         </View>
       </View>
 
@@ -104,7 +99,7 @@ export default function ExerciseDetailScreen({ route, navigation }) {
           <Text style={styles.emptyText}>
             {history.length === 0
               ? 'Nenhum treino registrado ainda'
-              : 'Faça pelo menos 2 treinos para ver o gráfico'}
+              : 'Registre pelo menos 2 séries para ver o gráfico'}
           </Text>
         </View>
       ) : (

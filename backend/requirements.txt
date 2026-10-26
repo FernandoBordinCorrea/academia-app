@@ -9,5 +9,6 @@ alembic
 psycopg2-binary
 email-validator
 mediapipe==0.10.14
-opencv-python-headless
-scikit-learn
+opencv-python-headless==4.13.0.92
+scikit-learn==1.8.0
+numpy==2.4.4

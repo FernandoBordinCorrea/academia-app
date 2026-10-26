@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import api from '../services/api';
 import styles from './HomeScreen.styles';
+import TimerChip from '../components/TimerChip';
 
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -16,7 +17,7 @@ function formatDate(date) {
 
 export default function HomeScreen({ navigation }) {
   const { user, logout } = useAuth();
-  const [stats, setStats] = useState({ total_workouts: 0, total_calories: 0 });
+  const [stats, setStats] = useState({ total_workouts: 0 });
   const today = new Date();
 
   useFocusEffect(
@@ -29,19 +30,19 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.date}>{formatDate(today)}</Text>
-      <Text style={styles.greeting}>Olá, {user?.name?.split(' ')[0]}</Text>
+      <View style={styles.topRow}>
+        <View style={styles.topRowText}>
+          <Text style={styles.date}>{formatDate(today)}</Text>
+          <Text style={styles.greeting}>Olá, {user?.name?.split(' ')[0]}</Text>
+        </View>
+        <TimerChip />
+      </View>
       <Text style={styles.subtitle}>O que vamos treinar hoje?</Text>
 
       <View style={styles.statsRow}>
         <Ionicons name="barbell-outline" size={18} color="#E8FF47" />
         <Text style={styles.statText}>
           <Text style={styles.statHighlight}>{stats.total_workouts}</Text> treinos
-        </Text>
-        <Text style={styles.statDivider}>·</Text>
-        <Ionicons name="flame-outline" size={18} color="#E8FF47" />
-        <Text style={styles.statText}>
-          <Text style={styles.statHighlight}>{stats.total_calories}</Text> kcal
         </Text>
         <Text style={styles.statDivider}>este mês</Text>
       </View>

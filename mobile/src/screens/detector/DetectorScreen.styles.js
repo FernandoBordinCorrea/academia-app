@@ -314,6 +314,17 @@ export default StyleSheet.create({
     fontSize: 17,
     letterSpacing: 0.3,
   },
+  salvoGaleriaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 12,
+  },
+  salvoGaleriaText: {
+    color: '#888',
+    fontSize: 12,
+  },
 
   // ── Modal de vídeo ────────────────────────────────────────────────────────
   videoModal: {

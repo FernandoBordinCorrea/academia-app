@@ -7,6 +7,15 @@ export default StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
   },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  topRowText: {
+    flex: 1,
+  },
   date: {
     fontSize: 13,
     color: '#555',

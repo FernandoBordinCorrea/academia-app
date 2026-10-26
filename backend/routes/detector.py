@@ -30,6 +30,7 @@ MIN_FRAMES_REP_VID = 5
 MIN_FRAMES_REP_VID_BICEPS = 3
 RESULTADO_FRAMES   = 25
 FRAME_SKIP         = 3
+MAX_DIMENSAO       = 960  # reduz frames maiores que isso antes do MediaPipe processar
 
 router = APIRouter()
 _mp_pose = mp.solutions.pose
@@ -43,6 +44,16 @@ def _angulo(a, b, c):
     ang = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
     ang = np.abs(ang * 180 / np.pi)
     return 360 - ang if ang > 180 else ang
+
+def _reduzir_frame(frame):
+    """Vídeos 4K+ (câmera nativa do celular) deixam o MediaPipe muito lento
+    sem ganho de precisão — reduz pro maior lado ficar em MAX_DIMENSAO."""
+    h, w = frame.shape[:2]
+    maior_lado = max(h, w)
+    if maior_lado <= MAX_DIMENSAO:
+        return frame
+    escala = MAX_DIMENSAO / maior_lado
+    return cv2.resize(frame, (int(w * escala), int(h * escala)), interpolation=cv2.INTER_AREA)
 
 # ── Extração de features por exercício ───────────────────────────────────────
 def _extrair_frontraise(lm, w, h):
@@ -143,7 +154,11 @@ def _processar_video(path: str, exercise: str) -> dict:
 
     with _mp_pose.Pose(min_detection_confidence=0.6, min_tracking_confidence=0.6) as pose:
         while True:
-            ret, frame = cap.read()
+            # cap.grab() só avança o ponteiro sem decodificar — decodifica
+            # (cap.retrieve) só o frame que vamos de fato usar. Num vídeo 4K
+            # decodificar todo frame mesmo pra descartar (FRAME_SKIP) é o que
+            # mais pesava no tempo de processamento, não o MediaPipe em si.
+            ret = cap.grab()
             if not ret:
                 break
 
@@ -151,9 +166,14 @@ def _processar_video(path: str, exercise: str) -> dict:
             if frame_idx % FRAME_SKIP != 0:
                 continue
 
-            h, w = frame.shape[:2]
-            rgb  = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            res  = pose.process(rgb)
+            ret, frame = cap.retrieve()
+            if not ret:
+                continue
+
+            frame = _reduzir_frame(frame)
+            h, w  = frame.shape[:2]
+            rgb   = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            res   = pose.process(rgb)
 
             if not res.pose_landmarks:
                 continue

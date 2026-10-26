@@ -25,9 +25,6 @@ class Exercise(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    sets = Column(Integer, nullable=False)
-    reps = Column(Integer, nullable=False)
-    weight = Column(Float, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -53,6 +50,9 @@ class WorkoutExercise(Base):
     workout_id = Column(Integer, ForeignKey("workouts.id"), nullable=False)
     exercise_id = Column(Integer, ForeignKey("exercises.id"), nullable=False)
     order = Column(Integer, nullable=False)
+    sets = Column(Integer, nullable=False)
+    reps = Column(Integer, nullable=False)
+    weight = Column(Float, nullable=False)
 
     workout = relationship("Workout", back_populates="items")
     exercise = relationship("Exercise")
@@ -65,7 +65,6 @@ class WorkoutSession(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     workout_id = Column(Integer, ForeignKey("workouts.id"), nullable=False)
     duration_seconds = Column(Integer, nullable=False)
-    calories_burned = Column(Float, nullable=True)
     performed_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User")
@@ -84,3 +83,16 @@ class SessionExerciseLog(Base):
 
     session = relationship("WorkoutSession", back_populates="logs")
     exercise = relationship("Exercise")
+    sets = relationship("SessionExerciseSetLog", back_populates="log", cascade="all, delete-orphan")
+
+
+class SessionExerciseSetLog(Base):
+    __tablename__ = "session_exercise_set_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_exercise_log_id = Column(Integer, ForeignKey("session_exercise_logs.id"), nullable=False)
+    set_number = Column(Integer, nullable=False)
+    weight_used = Column(Float, nullable=False)
+    reps_used = Column(Integer, nullable=False)
+
+    log = relationship("SessionExerciseLog", back_populates="sets")

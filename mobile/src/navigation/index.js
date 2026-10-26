@@ -2,6 +2,8 @@ import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
+import { navigationRef } from './navigationRef';
+import TimerChip from '../components/TimerChip';
 
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
@@ -34,6 +36,7 @@ function AppStack() {
         headerStyle: { backgroundColor: '#1E1E1E' },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: 'bold' },
+        headerRight: () => <TimerChip />,
       }}
     >
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
@@ -43,7 +46,11 @@ function AppStack() {
       <Stack.Screen name="WorkoutList" component={WorkoutListScreen} options={{ title: 'Treinos' }} />
       <Stack.Screen name="WorkoutForm" component={WorkoutFormScreen} options={{ title: '' }} />
       <Stack.Screen name="WorkoutDetail" component={WorkoutDetailScreen} options={{ title: '' }} />
-      <Stack.Screen name="WorkoutSession" component={WorkoutSessionScreen} options={{ title: 'Em andamento', headerBackVisible: false }} />
+      <Stack.Screen
+        name="WorkoutSession"
+        component={WorkoutSessionScreen}
+        options={{ title: 'Em andamento', headerBackVisible: false, headerRight: () => null }}
+      />
       <Stack.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendário' }} />
       <Stack.Screen name="Detector" component={DetectorScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
@@ -62,7 +69,7 @@ export default function Navigation() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       {user ? <AppStack /> : <AuthStack />}
     </NavigationContainer>
   );

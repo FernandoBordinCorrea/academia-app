@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import styles from './RegisterScreen.styles';
 import { parseApiError } from '../../utils/errorMessage';
+import { passwordError, phoneError } from '../../utils/validators';
 import { Ionicons } from '@expo/vector-icons';
 import { useModal } from '../../context/ModalContext';
 
@@ -35,6 +36,16 @@ export default function RegisterScreen({ navigation }) {
     }
     if (password !== confirmpassword) {
       show('Erro', 'As senhas não conferem');
+      return;
+    }
+    const pwdError = passwordError(password);
+    if (pwdError) {
+      show('Erro', pwdError);
+      return;
+    }
+    const phnError = phoneError(phone);
+    if (phnError) {
+      show('Erro', phnError);
       return;
     }
     const weightNum = parseFloat(weight.replace(',', '.'));

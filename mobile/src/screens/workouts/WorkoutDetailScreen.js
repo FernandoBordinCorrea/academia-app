@@ -37,19 +37,19 @@ export default function WorkoutDetailScreen({ route, navigation }) {
             <View style={styles.statsRow}>
               <View style={styles.stat}>
                 <MaterialCommunityIcons name="repeat" size={14} color="#E8FF47" />
-                <Text style={styles.statValue}>{item.exercise.sets}</Text>
+                <Text style={styles.statValue}>{item.sets}</Text>
                 <Text style={styles.statLabel}>séries</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
                 <Ionicons name="flash-outline" size={14} color="#E8FF47" />
-                <Text style={styles.statValue}>{item.exercise.reps}</Text>
+                <Text style={styles.statValue}>{item.reps}</Text>
                 <Text style={styles.statLabel}>reps</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
                 <MaterialCommunityIcons name="weight-kilogram" size={14} color="#E8FF47" />
-                <Text style={styles.statValue}>{item.exercise.weight}</Text>
+                <Text style={styles.statValue}>{item.weight}</Text>
                 <Text style={styles.statLabel}>kg</Text>
               </View>
             </View>

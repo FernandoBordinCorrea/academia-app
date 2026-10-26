@@ -6,6 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Brightness from 'expo-brightness';
+import * as MediaLibrary from 'expo-media-library';
+import * as ImagePicker from 'expo-image-picker';
 import appConfig from '../../config';
 import styles from './DetectorScreen.styles';
 
@@ -29,6 +31,7 @@ export default function DetectorScreen({ navigation }) {
   const [showVideo, setShowVideo] = useState(false);
   const [torchOn, setTorchOn]     = useState(false);
   const [exercicio, setExercicio] = useState('frontraise');
+  const [salvoGaleria, setSalvoGaleria] = useState(false);
 
   const cameraRef             = useRef(null);
   const timerRef              = useRef(null);
@@ -103,6 +106,7 @@ export default function DetectorScreen({ navigation }) {
     setParando(false);
     setDuracao(0);
     setVideoUri(null);
+    setSalvoGaleria(false);
     setTela('recording');
 
     await new Promise(resolve => setTimeout(resolve, 600));
@@ -116,6 +120,7 @@ export default function DetectorScreen({ navigation }) {
       if (!video?.uri) throw new Error('Arquivo de vídeo não gerado');
 
       setVideoUri(video.uri);
+      salvarNaGaleria(video.uri);
       setTela('processing');
       await enviarVideo(video.uri);
     } catch (e) {
@@ -125,6 +130,58 @@ export default function DetectorScreen({ navigation }) {
     }
   };
 
+  // Salva o vídeo bruto (sem a compressão do player/WhatsApp) na galeria,
+  // pra dar pra reanalisar/comparar depois. Best-effort: se a permissão for
+  // negada ou o salvamento falhar, não interrompe o fluxo de análise.
+  const salvarNaGaleria = async (uri) => {
+    try {
+      const { granted } = await MediaLibrary.requestPermissionsAsync();
+      if (!granted) return;
+      await MediaLibrary.createAssetAsync(uri);
+      setSalvoGaleria(true);
+    } catch {
+      // sem espaço, permissão revogada no meio do caminho, etc — ignora
+    }
+  };
+
+  // Permite analisar um vídeo já gravado fora do app (ex: celular fixo num
+  // tripé/apoio, ângulo controlado) em vez de gravar direto pela câmera.
+  const escolherDaGaleria = async () => {
+    const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!granted) {
+      setErroMsg('Permissão de galeria necessária para escolher um vídeo.');
+      setTela('error');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['videos'],
+      quality: 1,
+    });
+    if (result.canceled || !result.assets?.length) return;
+
+    const asset = result.assets[0];
+    if (asset.duration && asset.duration > 120000) {
+      setErroMsg('Vídeo muito longo (máx. 2 minutos). Escolha um trecho menor ou grave direto pelo app.');
+      setTela('error');
+      return;
+    }
+    if (Math.max(asset.width ?? 0, asset.height ?? 0) > 1920) {
+      setErroMsg(
+        'Esse vídeo está em resolução muito alta (provavelmente 4K) e a análise pode ' +
+        'travar ou demorar demais. Reduza a qualidade de gravação da câmera do celular ' +
+        '(geralmente em Câmera > Configurações > Qualidade de vídeo) para 1080p ou menos.'
+      );
+      setTela('error');
+      return;
+    }
+
+    setVideoUri(asset.uri);
+    setSalvoGaleria(false);
+    setTela('processing');
+    await enviarVideo(asset.uri);
+  };
+
   const pararGravacao = () => {
     setParando(true);
     clearInterval(timerRef.current);
@@ -132,6 +189,9 @@ export default function DetectorScreen({ navigation }) {
   };
 
   const enviarVideo = async (uri) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90000);
+
     try {
       const token = await AsyncStorage.getItem('token');
       const formData = new FormData();
@@ -141,20 +201,27 @@ export default function DetectorScreen({ navigation }) {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
+        signal: controller.signal,
       });
 
       if (!response.ok) throw new Error(`Servidor retornou ${response.status}`);
       setResultado(await response.json());
       setTela('results');
     } catch (e) {
-      setErroMsg(`Erro ao analisar: ${e?.message ?? 'verifique a conexão'}`);
+      const msg = e?.name === 'AbortError'
+        ? 'Análise demorou demais (mais de 90s) — tente um vídeo mais curto'
+        : `Erro ao analisar: ${e?.message ?? 'verifique a conexão'}`;
+      setErroMsg(msg);
       setTela('error');
+    } finally {
+      clearTimeout(timeout);
     }
   };
 
   const reiniciar = () => {
     setResultado(null);
     setVideoUri(null);
+    setSalvoGaleria(false);
     setTela('idle');
   };
 
@@ -221,14 +288,15 @@ export default function DetectorScreen({ navigation }) {
               </TouchableOpacity>
             </View>
             <Text style={styles.instrucaoText}>
-              {exercicio === 'frontraise'
-                ? 'Posicione a câmera de lado e fique de lateral para ela'
-                : 'Posicione a câmera de lado e fique de lateral para ela'}
+              Posicione a câmera de lado e fique de lateral para ela
             </Text>
           </View>
           <View style={styles.bottomOverlay}>
             <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
               <Ionicons name="arrow-back" size={26} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconBtn} onPress={escolherDaGaleria}>
+              <Ionicons name="images-outline" size={24} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.btnIniciar} onPress={iniciarContagem}>
               <Text style={styles.btnIniciarText}>Iniciar</Text>
@@ -341,6 +409,12 @@ export default function DetectorScreen({ navigation }) {
               <Ionicons name="play-circle-outline" size={20} color="#121212" />
               <Text style={styles.btnReverVideoText}>Rever vídeo</Text>
             </TouchableOpacity>
+          )}
+          {salvoGaleria && (
+            <View style={styles.salvoGaleriaRow}>
+              <Ionicons name="checkmark-circle" size={14} color="#4CAF50" />
+              <Text style={styles.salvoGaleriaText}>Vídeo original salvo na galeria</Text>
+            </View>
           )}
 
           <View style={styles.resultsBtns}>
